@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DitzHosting - MiniPanel</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <header>
+    <h1>DitzHosting MiniPanel</h1>
+    <p>© ADITdeveloper</p>
+  </header>
+
+  <main>
+    <section class="login">
+      <input id="username" type="text" placeholder="Username">
+      <button onclick="login()">Login</button>
+    </section>
+
+    <section id="panel" class="hidden">
+      <h2>File Manager</h2>
+      <select id="fileSelect" onchange="loadFile()"></select>
+      <textarea id="fileContent" placeholder="Isi file..."></textarea>
+      <button onclick="saveFile()">💾 Save</button>
+      <button onclick="deleteFile()">🗑 Delete</button>
+      <input id="newFileName" type="text" placeholder="namaFile.ext">
+      <button onclick="createFile()">➕ Create File</button>
+    </section>
+  </main>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
