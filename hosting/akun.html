@@ -3,879 +3,330 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>DitxCloud — Akun & Dashboard</title>
-
+<title>DitxCloud — Akun (Login / Register)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-
-<!-- CodeMirror (editor) -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css"/>
-
 <style>
   :root{
-    --bg:#061028; --panel:#0b1b32; --muted:#9fb6cc;
+    --bg:#041022; --panel:#07162a; --muted:#9fb6cc;
     --accent1:#7c5cff; --accent2:#00d4ff; --glass: rgba(255,255,255,0.03);
-    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-    color-scheme:dark; color:#e6f1ff;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    color-scheme: dark; color:#e6f4ff;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;background:
-    radial-gradient(900px 380px at 10% 12%, rgba(124,92,255,0.06), transparent 8%),
-    linear-gradient(180deg,#001025 0%,var(--bg) 40%); -webkit-font-smoothing:antialiased}
-  a{color:inherit;text-decoration:none}
+    radial-gradient(800px 300px at 10% 12%, rgba(124,92,255,0.06), transparent 8%),
+    linear-gradient(180deg,#000814 0%, var(--bg) 40%); -webkit-font-smoothing:antialiased}
+  a{color:inherit}
   .topbar{
-    height:72px;padding:12px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(255,255,255,0.03);
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
-    position:sticky;top:0;z-index:50;
+    height:72px;display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.03);
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
   }
-  .logo{width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:grid;place-items:center;font-weight:800}
+  .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:grid;place-items:center;font-weight:800}
   .brand{display:flex;flex-direction:column}
-  .wrap{max-width:1200px;margin:0 auto;display:flex;gap:18px;padding:18px}
-  /* AUTH layout */
-  .auth-wrap{display:grid;grid-template-columns:1fr 420px;gap:28px;padding:32px;align-items:center}
-  .auth-left h1{margin:0 0 8px 0;font-size:28px}
-  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
-  .input{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;margin-bottom:10px}
-  .btn{padding:10px 12px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:white;cursor:pointer;font-weight:700}
+  .wrap{max-width:1100px;margin:24px auto;padding:0 18px}
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+
+  /* layout */
+  .auth-layout{display:grid;grid-template-columns: 1fr 420px; gap:22px; align-items:start}
+  .lead{font-size:22px;margin:0 0 10px 0}
+  .muted{color:var(--muted);font-size:14px}
+
+  /* forms */
+  .field{margin-bottom:12px}
+  input[type="text"], input[type="password"], input[type="email"]{
+    width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;
+  }
+  .btn{padding:10px 14px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:white;cursor:pointer;font-weight:700}
   .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent2)}
-  .muted{color:var(--muted)}
-  /* dashboard layout */
-  .layout{display:grid;grid-template-columns:300px 1fr;gap:18px;padding:18px}
-  .sidebar{background:var(--panel);padding:18px;border-radius:12px;height:calc(100vh - 120px);overflow:auto;border:1px solid rgba(255,255,255,0.03)}
-  .avatar{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:grid;place-items:center;font-weight:800}
-  .menu{margin-top:12px;display:flex;flex-direction:column;gap:8px}
-  .menu button{padding:10px;border-radius:8px;border:none;background:transparent;color:var(--muted);text-align:left;cursor:pointer}
-  .menu button.active{background:linear-gradient(90deg, rgba(124,92,255,0.12), rgba(0,212,255,0.04));color:#fff}
-  .main{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);padding:18px;border-radius:12px;min-height:600px;border:1px solid rgba(255,255,255,0.03)}
-  .header-row{display:flex;justify-content:space-between;align-items:center}
-  .small{font-size:13px;color:var(--muted)}
-  .grid{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-top:12px}
-  .panel{background:var(--glass);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
-  .file-list{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto;padding:6px}
-  .file-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));border:1px solid rgba(255,255,255,0.02)}
-  .CodeMirror{height:360px}
-  /* responsive */
+
+  .tabs{display:flex;gap:8px;margin-bottom:12px}
+  .tab{padding:8px 12px;border-radius:8px;cursor:pointer;background:transparent;border:1px solid transparent;color:var(--muted)}
+  .tab.active{background:linear-gradient(90deg, rgba(124,92,255,0.12), rgba(0,212,255,0.04));color:#fff;border-color:rgba(255,255,255,0.03)}
+
+  .status{margin-top:12px;font-size:13px;color:var(--muted)}
+
+  /* logged-in box */
+  .logged{display:flex;flex-direction:column;gap:8px}
+  .actions{display:flex;gap:8px}
+
+  /* small responsive */
   @media (max-width:980px){
-    .auth-wrap{grid-template-columns:1fr}
-    .layout{grid-template-columns:1fr}
-    .sidebar{height:auto}
+    .auth-layout{grid-template-columns:1fr}
   }
 </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
 <div class="topbar">
   <div style="display:flex;gap:12px;align-items:center">
     <div class="logo">JC</div>
     <div class="brand">
       <div style="font-weight:800">DitxCloud</div>
-      <div class="small muted">cPanel Jupiter — Akun & Dashboard</div>
+      <div style="font-size:13px;color:var(--muted)">cPanel Jupiter — Akun</div>
     </div>
   </div>
-  <div style="margin-left:auto" id="topRightActions"></div>
+  <div style="margin-left:auto" id="topActions"></div>
 </div>
 
-<!-- AUTH SCREEN -->
-<div id="authScreen" style="display:none">
-  <div class="wrap auth-wrap">
-    <div class="auth-left">
-      <h1>Selamat datang di DitxCloud</h1>
-      <p class="muted">Buat akun hostingmu, kelola file, email, database, domain, metrics, dan security. Semua data disimpan di Firebase Realtime Database (JSON).</p>
+<div class="wrap">
+  <div class="auth-layout">
+    <!-- left: info -->
+    <div>
+      <div class="card">
+        <h2 class="lead">Selamat datang di DitxCloud</h2>
+        <p class="muted">Panel hosting ala cPanel (Jupiter). Buat akun, login, lalu buka dashboard terpisah (dashboard.html). Data user disimpan pada Firebase Realtime Database sebagai JSON.</p>
 
-      <div style="margin-top:14px" class="card">
-        <h4 style="margin:0 0 8px 0">Keunggulan</h4>
-        <ul class="small muted">
-          <li>Full JSON-backed — cukup modal struktur data</li>
-          <li>Proteksi session & password hashed</li>
-          <li>File editor realtime (CodeMirror)</li>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
+
+        <h4 style="margin:0 0 6px 0">Keunggulan</h4>
+        <ul class="muted">
+          <li>File manager, email (simulasi), database & domain — seluruh metadata di JSON</li>
+          <li>Proteksi session & password hashed (SHA-256)</li>
+          <li>Desain modern, responsive, dan mudah diintegrasikan dengan dashboard terpisah</li>
         </ul>
       </div>
+
+      <div style="margin-top:16px" class="card">
+        <h4 style="margin:0 0 8px 0">Panduan singkat</h4>
+        <ol class="muted" style="margin:0;padding-left:18px">
+          <li>Daftar akun baru (domain unik)</li>
+          <li>Login — sistem membuat session di Firebase</li>
+          <li>Buka <code>dashboard.html</code> untuk mengelola fitur lengkap</li>
+        </ol>
+      </div>
     </div>
 
+    <!-- right: auth card -->
     <div>
-      <div class="card" id="cardRegister">
-        <h3 style="margin-top:0">Daftar Akun</h3>
-        <input id="reg_name" class="input" placeholder="Nama lengkap (Adit Dev)">
-        <input id="reg_domain" class="input" placeholder="Domain unik (adit)">
-        <input id="reg_pw" type="password" class="input" placeholder="Password (min 6)">
-        <input id="reg_addr" class="input" placeholder="Alamat">
-        <div style="display:flex;gap:8px">
-          <button class="btn" onclick="doRegister()">Daftar & Masuk</button>
-          <button class="btn ghost" onclick="showLogin()">Sudah Punya Akun?</button>
+      <div class="card" id="authCard">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700">Masuk / Buat Akun</div>
+            <div class="muted" style="font-size:13px">Akses dashboard hosting kamu setelah login</div>
+          </div>
         </div>
-        <div id="regMsg" class="small" style="margin-top:8px;color:var(--muted)"></div>
-      </div>
 
-      <div class="card" id="cardLogin" style="margin-top:12px;display:none">
-        <h3 style="margin-top:0">Login</h3>
-        <input id="login_domain" class="input" placeholder="Domain (adit)">
-        <input id="login_pw" type="password" class="input" placeholder="Password">
-        <div style="display:flex;gap:8px">
-          <button class="btn" onclick="doLogin()">Login</button>
-          <button class="btn ghost" onclick="showRegister()">Buat Akun Baru</button>
+        <div style="margin-top:14px">
+          <div class="tabs">
+            <div id="tab-register" class="tab active" onclick="switchTab('register')">Register</div>
+            <div id="tab-login" class="tab" onclick="switchTab('login')">Login</div>
+          </div>
+
+          <!-- REGISTER -->
+          <div id="box-register">
+            <div class="field"><input id="reg_name" type="text" placeholder="Nama lengkap (contoh: Adit Dev)"></div>
+            <div class="field"><input id="reg_domain" type="text" placeholder="Domain unik (contoh: adit) — akan jadi username"></div>
+            <div class="field"><input id="reg_pw" type="password" placeholder="Password (min 6)"></div>
+            <div class="field"><input id="reg_addr" type="text" placeholder="Alamat (kota, negara)"></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn" onclick="doRegister()">Daftar & Masuk</button>
+              <button class="btn ghost" onclick="switchTab('login')">Punya akun? Login</button>
+            </div>
+            <div id="regStatus" class="status"></div>
+          </div>
+
+          <!-- LOGIN -->
+          <div id="box-login" style="display:none">
+            <div class="field"><input id="login_domain" type="text" placeholder="Domain (contoh: adit)"></div>
+            <div class="field"><input id="login_pw" type="password" placeholder="Password"></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn" onclick="doLogin()">Login</button>
+              <button class="btn ghost" onclick="switchTab('register')">Daftar baru</button>
+            </div>
+            <div id="loginStatus" class="status"></div>
+          </div>
+
+          <!-- Already logged in -->
+          <div id="box-logged" style="display:none;margin-top:12px">
+            <div class="logged">
+              <div style="font-weight:700" id="loggedUser">Anda masuk sebagai: —</div>
+              <div class="muted" id="loggedDomain">Domain: —</div>
+              <div class="actions" style="margin-top:8px">
+                <button class="btn" id="goDashBtn" onclick="goDashboard()">Buka Dashboard</button>
+                <button class="btn ghost" onclick="logout()">Logout</button>
+              </div>
+              <div id="sessionInfo" class="status"></div>
+            </div>
+          </div>
+
         </div>
-        <div id="loginMsg" class="small" style="margin-top:8px;color:var(--muted)"></div>
+
+        <div class="status" style="margin-top:12px">Catatan: Password akan disimpan sebagai hash (SHA-256). Untuk keamanan produksi, gunakan Firebase Auth atau server-side verification.</div>
       </div>
     </div>
-
   </div>
 </div>
-
-<!-- APP SCREEN -->
-<div id="appScreen" style="display:none">
-  <div class="wrap layout">
-    <aside class="sidebar">
-      <div style="display:flex;gap:12px;align-items:center">
-        <div class="avatar" id="avatarTxt">--</div>
-        <div>
-          <div id="sideName" style="font-weight:700">-</div>
-          <div class="small" id="sideDomain">-</div>
-        </div>
-      </div>
-
-      <div class="menu" id="mainMenu">
-        <button data-panel="overview" class="active" onclick="navigate('overview')">Overview</button>
-        <button data-panel="files" onclick="navigate('files')">📂 Files</button>
-        <button data-panel="email" onclick="navigate('email')">📧 Email</button>
-        <button data-panel="databases" onclick="navigate('databases')">🗃 Databases</button>
-        <button data-panel="domains" onclick="navigate('domains')">🌐 Domains</button>
-        <button data-panel="metrics" onclick="navigate('metrics')">📊 Metrics</button>
-        <button data-panel="security" onclick="navigate('security')">🔒 Security</button>
-        <button data-panel="software" onclick="navigate('software')">⚙️ Software</button>
-        <button data-panel="account" onclick="navigate('account')">👤 Account</button>
-        <button style="margin-top:10px" onclick="doLogout()">Logout</button>
-      </div>
-    </aside>
-
-    <main class="main">
-      <div class="header-row">
-        <h2 id="mainTitle">Overview</h2>
-        <div class="small" id="userStatus">Loading...</div>
-      </div>
-
-      <div class="grid">
-        <div>
-          <!-- Overview -->
-          <div id="panel_overview" class="panel">
-            <h3>Overview</h3>
-            <div id="overviewContent"><div class="small">Memuat profil...</div></div>
-          </div>
-
-          <!-- Files -->
-          <div id="panel_files" class="panel" style="margin-top:14px;display:none">
-            <div style="display:flex;gap:8px;align-items:center" class="toolbar">
-              <input id="newFileName" class="input" placeholder="Nama file (contoh: index.html)">
-              <select id="newFileType" class="input" style="width:140px">
-                <option value="html">HTML</option><option value="css">CSS</option><option value="js">JS</option><option value="txt">TXT</option>
-              </select>
-              <button class="btn" onclick="createFile()">Buat</button>
-              <button class="btn ghost" onclick="openUploadDialog()">Upload</button>
-              <input type="file" id="uploadInput" style="display:none" accept="*/*" onchange="handleUpload(event)">
-            </div>
-
-            <div style="display:flex;gap:12px;margin-top:12px">
-              <div style="flex:1">
-                <div class="file-list" id="fileList">Memuat file...</div>
-                <div style="margin-top:12px;">
-                  <h4 class="small">Images</h4>
-                  <div id="imageList" class="small">Memuat...</div>
-                </div>
-              </div>
-
-              <div style="width:560px">
-                <div id="editorWrap"><div class="small">Pilih file untuk edit</div></div>
-                <div style="margin-top:8px;display:flex;gap:8px">
-                  <button class="btn" onclick="refreshPreview()">Preview</button>
-                  <button class="btn ghost" onclick="downloadCurrent()">Download</button>
-                  <button class="btn ghost" onclick="createBackup()">Backup</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Email -->
-          <div id="panel_email" class="panel" style="margin-top:14px;display:none">
-            <h3>Email</h3>
-            <div class="small">Buat account email, forwarders, autoresponders — disimpan di JSON (simulasi).</div>
-            <div style="margin-top:10px;display:flex;gap:8px">
-              <input id="email_local" class="input" placeholder="local part (contoh: info)">
-              <input id="email_pw" class="input" placeholder="password email">
-              <button class="btn" onclick="createEmailAccount()">Buat Email</button>
-            </div>
-            <div id="emailList" style="margin-top:12px"></div>
-          </div>
-
-          <!-- Databases -->
-          <div id="panel_databases" class="panel" style="margin-top:14px;display:none">
-            <h3>Databases (Simulasi)</h3>
-            <div class="small">Buat database & user, lihat metadata. phpMyAdmin = JSON editor (simulasi).</div>
-            <div style="margin-top:10px;display:flex;gap:8px">
-              <input id="db_name" class="input" placeholder="Nama database">
-              <button class="btn" onclick="createDatabase()">Buat DB</button>
-            </div>
-            <div id="dbList" style="margin-top:12px"></div>
-            <div id="dbEditor" style="margin-top:12px"></div>
-          </div>
-
-          <!-- Domains -->
-          <div id="panel_domains" class="panel" style="margin-top:14px;display:none">
-            <h3>Domains & DNS</h3>
-            <div class="small">Tambah subdomain, redirects, dan sunting zone records.</div>
-            <div style="margin-top:10px;display:flex;gap:8px">
-              <input id="sub_name" class="input" placeholder="subdomain (contoh: blog)">
-              <button class="btn" onclick="addSubdomain()">Tambah</button>
-            </div>
-            <div id="subList" style="margin-top:12px"></div>
-
-            <div style="margin-top:12px">
-              <h4 class="small">Zone Editor (Tambah Record)</h4>
-              <div style="display:flex;gap:8px;margin-top:6px">
-                <select id="zone_type" class="input" style="width:120px"><option>A</option><option>CNAME</option><option>MX</option><option>TXT</option></select>
-                <input id="zone_name" class="input" placeholder="name (contoh: @ or www)">
-                <input id="zone_value" class="input" placeholder="value">
-                <button class="btn" onclick="addZoneRecord()">Tambah Record</button>
-              </div>
-              <div id="zoneList" style="margin-top:10px" class="small"></div>
-            </div>
-          </div>
-
-          <!-- Metrics -->
-          <div id="panel_metrics" class="panel" style="margin-top:14px;display:none">
-            <h3>Metrics</h3>
-            <div id="metricsContent" class="small">Visitors & bandwidth logs disimpan otomatis saat preview/spesifik action. Untuk demo kamu akan melihat logs di sini.</div>
-            <div style="margin-top:10px"><button class="btn" onclick="loadMetrics()">Muat Metrics</button></div>
-            <div id="metricsList" style="margin-top:10px" class="small"></div>
-          </div>
-
-          <!-- Security -->
-          <div id="panel_security" class="panel" style="margin-top:14px;display:none">
-            <h3>Security</h3>
-            <div class="small">IP Blocker, Directory Privacy, 2FA (simulasi), SSL status.</div>
-            <div style="margin-top:10px;display:flex;gap:8px">
-              <input id="block_ip" class="input" placeholder="IP to block (example: 203.0.113.5)">
-              <button class="btn" onclick="blockIP()">Block IP</button>
-            </div>
-            <div id="blockedList" style="margin-top:10px" class="small"></div>
-
-            <div style="margin-top:12px">
-              <h4 class="small">Directory Privacy</h4>
-              <input id="dir_name" class="input" placeholder="folder to protect (ex: secret)">
-              <input id="dir_pw" class="input" placeholder="password for folder">
-              <button class="btn" onclick="protectDirectory()">Protect</button>
-              <div id="dirList" style="margin-top:10px" class="small"></div>
-            </div>
-          </div>
-
-          <!-- Software -->
-          <div id="panel_software" class="panel" style="margin-top:14px;display:none">
-            <h3>Software / Installer (Simulasi)</h3>
-            <div class="small">Install aplikasi (simulasi). Metadata akan tersimpan di JSON.</div>
-            <div style="margin-top:8px;display:flex;gap:8px">
-              <select id="soft_app" class="input" style="width:200px"><option value="wordpress">WordPress</option><option value="joomla">Joomla</option></select>
-              <button class="btn" onclick="installApp()">Install</button>
-            </div>
-            <div id="softList" style="margin-top:12px" class="small"></div>
-          </div>
-
-          <!-- Account -->
-          <div id="panel_account" class="panel" style="margin-top:14px;display:none">
-            <h3>Account</h3>
-            <div id="accountContent" class="small">Memuat...</div>
-            <div style="margin-top:10px">
-              <button class="btn ghost" onclick="changePassword()">Ganti Password</button>
-            </div>
-          </div>
-
-        </div>
-
-        <aside>
-          <div class="panel">
-            <h4>Preview (index.html)</h4>
-            <iframe id="previewFrame" style="width:100%;height:260px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:white"></iframe>
-            <div style="display:flex;gap:8px;margin-top:8px">
-              <button class="btn" onclick="refreshPreview()">Refresh</button>
-              <button class="btn ghost" onclick="createShare()">Create Share</button>
-            </div>
-          </div>
-
-          <div class="panel" style="margin-top:12px">
-            <h4>Quota</h4>
-            <div id="quotaInfo" class="small">Memuat...</div>
-          </div>
-
-          <div class="panel" style="margin-top:12px">
-            <h4>Recent Logs</h4>
-            <div id="recentLogs" class="small">Memuat...</div>
-          </div>
-        </aside>
-      </div>
-
-      <!-- admin area hidden unless admin -->
-      <div id="panel_admin" class="panel" style="margin-top:14px;display:none">
-        <h3>Admin — All users</h3>
-        <div id="adminUsers" class="small">Memuat...</div>
-      </div>
-    </main>
-  </div>
-</div>
-
-<!-- CodeMirror -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
 
 <script>
 /*
-  akun.html SPA (Phase1+)
-  - Uses Firebase Realtime DB REST API (no SDK). Set DB_URL below.
-  - Passwords saved as SHA-256 hashes.
-  - Sessions saved at /sessions/{token} with expires.
-  - SessionGuard must pass to write.
-  - Many features are simulated but fully functional on JSON level.
+ akun.html (auth-only)
+ - terpisah dari dashboard; setelah login redirect ke dashboard.html
+ - menggunakan Firebase Realtime DB REST API (DB_URL di bawah)
+ - menyimpan sessions di /sessions/{token}
+ - menyimpan user di /users/{domain}
 */
 
+// === CONFIG ===
 const DB_URL = "https://ditxcloud-default-rtdb.asia-southeast1.firebasedatabase.app";
-const SESSION_TTL = 1000 * 60 * 60 * 24 * 7;
-const DEFAULT_QUOTA = 500 * 1024; // 500 KB
+const SESSION_TTL = 1000 * 60 * 60 * 24 * 7; // 7 hari
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 1000 * 60 * 5; // 5 menit
 
-let state = { domain: null, profile: null, sessionToken: null, editor: null, currentFile: null };
+// === state & helpers ===
+let state = { sessionToken: null, domain: null };
 
-// ---------- helpers ----------
 function jq(path){ return `${DB_URL}/${path}.json`; }
-async function safeFetch(url, opts={}){ const r = await fetch(url, opts); if(r.status===200) { try{ return await r.json(); }catch(e){ return null } } if(r.status===204) return null; throw new Error('HTTP '+r.status); }
-function randToken(len=28){ const arr=new Uint8Array(len); crypto.getRandomValues(arr); return Array.from(arr).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+async function safeFetch(url, opts={}){ try{ const r = await fetch(url, opts); if(r.ok){ try{ return await r.json(); }catch(e){ return null; } } if(r.status === 204) return null; return null; }catch(e){ return null; } }
+function randToken(len=28){ const arr = new Uint8Array(len); crypto.getRandomValues(arr); return Array.from(arr).map(b=>b.toString(16).padStart(2,'0')).join(''); }
 async function sha256Hex(str){ const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
-function fmtBytes(n){ if(!n) return '0 B'; if(n<1024) return n+' B'; if(n<1024*1024) return (n/1024).toFixed(1)+' KB'; return (n/1024/1024).toFixed(2)+' MB'; }
-function sizeUtf8(s){ return new TextEncoder().encode(s||'').length; }
-function sanitizeFilename(name){ if(!name) return null; name = name.trim(); if(name.includes('/')||name.includes('..')) return null; if(!/^[\w\-. ]+$/.test(name)) return null; return name; }
-async function logAction(domain, action, detail){ try{ const t = Date.now(); await fetch(jq(`logs/${domain}/${t}`), {method:'PUT', body: JSON.stringify({action,detail,time:t})}); }catch(e){} }
+function now(){ return Date.now(); }
+function setSessionLocal(token){ localStorage.setItem('ditx_session', token); state.sessionToken = token; }
+function clearSessionLocal(){ localStorage.removeItem('ditx_session'); state.sessionToken = null; state.domain = null; }
 
-// ---------- session ----------
+// simple UI helpers
+function $(id){ return document.getElementById(id); }
+function switchTab(t){
+  if(t==='login'){ $('box-login').style.display=''; $('box-register').style.display='none'; $('tab-login').classList.add('active'); $('tab-register').classList.remove('active'); }
+  else { $('box-login').style.display='none'; $('box-register').style.display=''; $('tab-login').classList.remove('active'); $('tab-register').classList.add('active'); }
+  $('regStatus').innerText=''; $('loginStatus').innerText='';
+}
+
+// === RATE LIMIT (simple, per-browser) ===
+function getLoginMeta(domain){
+  try{ const raw = sessionStorage.getItem('login_meta_'+domain); return raw?JSON.parse(raw):{fails:0,lockedUntil:0}; }catch(e){ return {fails:0,lockedUntil:0}; }
+}
+function setLoginMeta(domain, meta){ sessionStorage.setItem('login_meta_'+domain, JSON.stringify(meta)); }
+
+// === session management ===
 async function createSession(domain){
-  const token = randToken(20);
+  const token = randToken(24);
   const expires = Date.now() + SESSION_TTL;
-  await fetch(jq(`sessions/${token}`), {method:'PUT', body: JSON.stringify({domain,expires})});
-  localStorage.setItem('ditx_session', token);
-  state.sessionToken = token; state.domain = domain;
+  await fetch(jq(`sessions/${token}`), { method: 'PUT', body: JSON.stringify({ domain, expires }) });
+  setSessionLocal(token);
   return token;
 }
-async function verifySession(){
-  const t = localStorage.getItem('ditx_session');
-  if(!t) return false;
-  try{
-    const s = await safeFetch(jq(`sessions/${t}`));
-    if(!s){ localStorage.removeItem('ditx_session'); return false; }
-    if(s.expires < Date.now()){ await fetch(jq(`sessions/${t}`), {method:'DELETE'}); localStorage.removeItem('ditx_session'); return false; }
-    state.sessionToken = t; state.domain = s.domain; return true;
-  }catch(e){ return false; }
-}
-async function sessionGuard(){
-  const ok = await verifySession();
-  if(!ok){ alert('Session invalid, please login again'); showAuth(); return false; }
-  return true;
+async function verifySessionLocal(){
+  const token = localStorage.getItem('ditx_session');
+  if(!token) return false;
+  const s = await safeFetch(jq(`sessions/${token}`));
+  if(!s) { clearSessionLocal(); return false; }
+  if(s.expires < Date.now()){ await fetch(jq(`sessions/${token}`), { method:'DELETE' }).catch(()=>{}); clearSessionLocal(); return false; }
+  state.sessionToken = token; state.domain = s.domain; return true;
 }
 
-// ---------- auth: register / login ----------
-async function showLogin(){ document.getElementById('cardLogin').style.display=''; document.getElementById('cardRegister').style.display='none'; }
-async function showRegister(){ document.getElementById('cardLogin').style.display='none'; document.getElementById('cardRegister').style.display=''; }
-
+// === AUTH: register & login ===
 async function doRegister(){
-  const name = (document.getElementById('reg_name').value||'').trim();
-  const domain = (document.getElementById('reg_domain').value||'').trim().toLowerCase();
-  const pw = document.getElementById('reg_pw').value||'';
-  const addr = (document.getElementById('reg_addr').value||'').trim();
-  if(!name||!domain||!pw||!addr){ document.getElementById('regMsg').innerText='Lengkapi semua field'; return; }
-  if(pw.length < 6){ document.getElementById('regMsg').innerText='Password minimal 6 karakter'; return; }
-  if(!/^[a-z0-9\-_]{3,36}$/.test(domain)){ document.getElementById('regMsg').innerText='Domain hanya huruf kecil/angka/-/_ (3-36)'; return; }
-  const existing = await safeFetch(jq(`users/${domain}`)) || null;
-  if(existing){ document.getElementById('regMsg').innerText='Domain sudah terpakai'; return; }
+  $('regStatus').innerText = 'Memproses...';
+  const nama = ($('reg_name').value||'').trim();
+  const domain = ($('reg_domain').value||'').trim().toLowerCase();
+  const pw = $('reg_pw').value||'';
+  const addr = ($('reg_addr').value||'').trim();
+  if(!nama || !domain || !pw || !addr){ $('regStatus').innerText='Lengkapi semua field'; return; }
+  if(pw.length < 6){ $('regStatus').innerText='Password minimal 6 karakter'; return; }
+  if(!/^[a-z0-9\-_]{3,36}$/.test(domain)){ $('regStatus').innerText='Domain hanya huruf kecil/angka/-/_ (3-36)'; return; }
+
+  const existing = await safeFetch(jq(`users/${domain}`));
+  if(existing){ $('regStatus').innerText='Domain sudah terpakai'; return; }
+
   const hash = await sha256Hex(pw);
-  const profile = { profile:{nama:name,domain,alamat:addr,createdAt:Date.now()}, auth:{passwordHash:hash}, quota:{limitBytes:DEFAULT_QUOTA, usedBytes:0}, files:{}, email:{accounts:{}}, databases:{}, domains:{}, metrics:{}, security:{}, software:{}, logs:{} };
-  await fetch(jq(`users/${domain}`), {method:'PUT', body: JSON.stringify(profile)});
+  const payload = {
+    profile: { nama, domain, alamat: addr, createdAt: Date.now() },
+    auth: { passwordHash: hash },
+    quota: { limitBytes: 500*1024, usedBytes: 0 },
+    files: {}, email: {}, databases: {}, domains: {}, metrics: {}, security: {}, software: {}, logs: {}
+  };
+
+  await fetch(jq(`users/${domain}`), { method:'PUT', body: JSON.stringify(payload) });
   await createSession(domain);
-  await logAction(domain, 'register', {});
-  document.getElementById('regMsg').innerText='Registrasi berhasil — kamu login otomatis';
-  await loadProfile();
-  showApp();
+  // log minimal
+  await fetch(jq(`logs/${domain}/${Date.now()}`), { method:'PUT', body: JSON.stringify({ action:'register', time:Date.now() }) });
+  state.domain = domain;
+  $('regStatus').innerText = 'Registrasi berhasil — redirect ke dashboard...';
+  setTimeout(()=>{ window.location.href = 'dashboard.html'; }, 900);
 }
 
 async function doLogin(){
-  const domain = (document.getElementById('login_domain').value||'').trim().toLowerCase();
-  const pw = document.getElementById('login_pw').value||'';
-  if(!domain||!pw){ document.getElementById('loginMsg').innerText='Isi domain & password'; return; }
+  $('loginStatus').innerText = 'Memproses...';
+  const domain = ($('login_domain').value||'').trim().toLowerCase();
+  const pw = $('login_pw').value||'';
+  if(!domain || !pw){ $('loginStatus').innerText='Isi domain & password'; return; }
+
+  // check lockout
+  const meta = getLoginMeta(domain);
+  if(meta.lockedUntil && meta.lockedUntil > now()){ const remain = Math.ceil((meta.lockedUntil - now())/1000); $('loginStatus').innerText = `Terlalu banyak percobaan. Coba lagi dalam ${remain}s`; return; }
+
   const profile = await safeFetch(jq(`users/${domain}`));
-  if(!profile){ document.getElementById('loginMsg').innerText='Domain tidak ditemukan'; return; }
+  if(!profile){ $('loginStatus').innerText='Domain tidak ditemukan'; meta.fails = (meta.fails||0)+1; setLoginMeta(domain, meta); return; }
   const hash = await sha256Hex(pw);
-  const stored = profile.auth ? profile.auth.passwordHash : profile.password; // support older key
-  if(stored !== hash){ document.getElementById('loginMsg').innerText='Password salah'; return; }
-  await createSession(domain);
-  await logAction(domain, 'login', {});
-  document.getElementById('loginMsg').innerText='Login sukses';
-  await loadProfile();
-  showApp();
-}
-
-// ---------- load profile ----------
-async function loadProfile(){
-  if(!state.domain) return;
-  state.profile = await safeFetch(jq(`users/${state.domain}`)) || {};
-  // normalize quota
-  if(!state.profile.quota) state.profile.quota = {limitBytes: DEFAULT_QUOTA, usedBytes:0};
-  // UI update
-  document.getElementById('avatarTxt').innerText = (state.profile.profile?.nama||state.domain).slice(0,2).toUpperCase();
-  document.getElementById('sideName').innerText = state.profile.profile?.nama || state.domain;
-  document.getElementById('sideDomain').innerText = (state.profile.profile?.domain || state.domain) + '.ditxcloud';
-  document.getElementById('overviewContent').innerHTML = `
-    <div><b>Nama:</b> ${state.profile.profile?.nama||'-'}</div>
-    <div><b>Domain:</b> ${(state.profile.profile?.domain||state.domain)}.ditxcloud</div>
-    <div><b>Alamat:</b> ${state.profile.profile?.alamat||'-'}</div>
-    <div><b>Dibuat:</b> ${new Date(state.profile.profile?.createdAt||0).toLocaleString()}</div>
-    <div style="margin-top:8px" class="small">Quota: ${fmtBytes(state.profile.quota?.usedBytes)} / ${fmtBytes(state.profile.quota?.limitBytes)}</div>`;
-  document.getElementById('quotaInfo').innerText = `${fmtBytes(state.profile.quota?.usedBytes)} / ${fmtBytes(state.profile.quota?.limitBytes)}`;
-  renderFileList();
-  loadImageList();
-  loadEmailList();
-  loadDBList();
-  loadSubdomains();
-  loadBlockedList();
-  loadRecentLogs();
-  loadSoftwareList();
-  loadAccountPanel();
-}
-
-// ---------- UI show/hide ----------
-function showAuth(){ document.getElementById('authScreen').style.display=''; document.getElementById('appScreen').style.display='none'; }
-function showApp(){ document.getElementById('authScreen').style.display='none'; document.getElementById('appScreen').style.display=''; }
-function doLogout(){
-  (async ()=>{
-    const token = localStorage.getItem('ditx_session');
-    if(token) await fetch(jq(`sessions/${token}`), {method:'DELETE'}).catch(()=>{});
-    localStorage.removeItem('ditx_session');
-    state = {domain:null, profile:null, sessionToken:null, editor:null, currentFile:null};
-    showAuth();
-  })();
-}
-function setActiveMenu(p){ document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active')); const btn=document.querySelector('.menu button[data-panel="'+p+'"]'); if(btn) btn.classList.add('active'); document.getElementById('mainTitle').innerText = p.charAt(0).toUpperCase()+p.slice(1); }
-
-// ---------- navigation ----------
-function navigate(panel){
-  setActiveMenu(panel);
-  ['overview','files','email','databases','domains','metrics','security','software','account','admin'].forEach(p=>{
-    const el = document.getElementById('panel_' + p);
-    if(el) el.style.display = 'none';
-  });
-  const show = document.getElementById('panel_' + panel);
-  if(show) show.style.display = '';
-  // load per panel
-  if(panel === 'files') renderFileList();
-  if(panel === 'overview') loadProfile();
-  if(panel === 'email') loadEmailList();
-  if(panel === 'databases') loadDBList();
-  if(panel === 'domains') loadSubdomains();
-  if(panel === 'metrics') loadMetrics();
-  if(panel === 'security') loadBlockedList();
-  if(panel === 'software') loadSoftwareList();
-  if(panel === 'account') loadAccountPanel();
-  if(panel === 'admin') loadAllUsers();
-}
-
-// ---------- FILES ----------
-async function listFiles(){ return await safeFetch(jq(`users/${state.domain}/files`)) || {}; }
-
-async function renderFileList(){
-  const files = await listFiles();
-  const el = document.getElementById('fileList'); el.innerHTML = '';
-  const keys = Object.keys(files).sort();
-  if(keys.length === 0) { el.innerHTML = '<div class="small">Belum ada file</div>'; return; }
-  keys.forEach(name=>{
-    const div = document.createElement('div'); div.className = 'file-item';
-    const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:600">${name}</div><div class="small">${fmtBytes(sizeUtf8(files[name]||''))}</div>`;
-    const right = document.createElement('div'); right.style.display='flex'; right.style.gap='8px';
-    const btnE = document.createElement('button'); btnE.className='btn'; btnE.innerText='Edit'; btnE.onclick = ()=>openFileEditor(name, files[name]||'');
-    const btnD = document.createElement('button'); btnD.className='btn ghost'; btnD.innerText='Hapus'; btnD.onclick = ()=>deleteFile(name);
-    right.appendChild(btnE); right.appendChild(btnD);
-    div.appendChild(left); div.appendChild(right);
-    el.appendChild(div);
-  });
-}
-
-async function createFile(){
-  if(!await sessionGuard()) return;
-  const raw = (document.getElementById('newFileName').value||'').trim();
-  const name = sanitizeFilename(raw);
-  if(!name) return alert('Nama file tidak valid');
-  const ext = name.split('.').pop().toLowerCase();
-  let starter = '';
-  if(ext === 'html') starter = "<!doctype html><html><head><meta charset='utf-8'><title>Index</title></head><body><h1>Hello from DitxCloud</h1></body></html>";
-  if(ext === 'css') starter = "/* CSS */";
-  if(ext === 'js') starter = "// JS";
-  if(ext === 'txt') starter = "Hello";
-  const add = sizeUtf8(starter);
-  if((state.profile.quota?.usedBytes || 0) + add > (state.profile.quota?.limitBytes || DEFAULT_QUOTA)) return alert('Melebihi quota');
-  await fetch(jq(`users/${state.domain}/files/${encodeURIComponent(name)}`), {method:'PUT', body: JSON.stringify(starter)});
-  await updateQuota(add);
-  await logAction(state.domain, 'create_file', {file:name, size:add});
-  document.getElementById('newFileName').value = '';
-  renderFileList();
-  refreshPreview();
-}
-
-async function openFileEditor(name, content){
-  state.currentFile = name;
-  const wrap = document.getElementById('editorWrap');
-  wrap.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-    <div><b>${name}</b><div class="small">Size: ${fmtBytes(sizeUtf8(content||''))}</div></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn ghost" onclick="downloadCurrent()">Download</button>
-      <button class="btn" onclick="saveCurrentFile()">Simpan</button>
-    </div></div><textarea id="editorArea"></textarea>`;
-  if(state.editor) state.editor.toTextArea();
-  state.editor = CodeMirror.fromTextArea(document.getElementById('editorArea'), {lineNumbers:true,theme:'dracula',mode: name.endsWith('.js')?'javascript':name.endsWith('.css')?'css':'htmlmixed'});
-  state.editor.setValue(content||'');
-}
-
-async function saveCurrentFile(){
-  if(!state.currentFile || !state.editor) return alert('Pilih file dulu');
-  if(!await sessionGuard()) return;
-  const content = state.editor.getValue();
-  const files = await listFiles();
-  const old = files[state.currentFile]||'';
-  const delta = sizeUtf8(content) - sizeUtf8(old);
-  if((state.profile.quota?.usedBytes || 0) + delta > (state.profile.quota?.limitBytes || DEFAULT_QUOTA)) return alert('Melebihi quota');
-  await fetch(jq(`users/${state.domain}/files/${encodeURIComponent(state.currentFile)}`), {method:'PUT', body: JSON.stringify(content)});
-  await updateQuota(delta);
-  await logAction(state.domain, 'save_file', {file:state.currentFile, size:sizeUtf8(content)});
-  renderFileList();
-  alert('Tersimpan');
-  refreshPreview();
-}
-
-async function deleteFile(name){
-  if(!confirm('Hapus file '+name+' ?')) return;
-  if(!await sessionGuard()) return;
-  const files = await listFiles();
-  const sz = sizeUtf8(files[name]||'');
-  await fetch(jq(`users/${state.domain}/files/${encodeURIComponent(name)}`), {method:'DELETE'});
-  await updateQuota(-sz);
-  await logAction(state.domain, 'delete_file', {file:name, size:sz});
-  renderFileList();
-  document.getElementById('editorWrap').innerHTML = `<div class="small">Pilih file untuk edit</div>`;
-  refreshPreview();
-}
-
-function downloadCurrent(){
-  if(!state.currentFile) return;
-  listFiles().then(files=>{
-    const content = files[state.currentFile]||'';
-    const blob = new Blob([content], {type:'text/plain'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = state.currentFile; a.click();
-  });
-}
-
-// ---------- upload images ----------
-function openUploadDialog(){ document.getElementById('uploadInput').click(); }
-async function handleUpload(e){
-  if(!await sessionGuard()) return;
-  const f = e.target.files[0];
-  if(!f) return;
-  const reader = new FileReader();
-  reader.onload = async function(evt){
-    const base = evt.target.result; // base64
-    const id = 'img_'+Date.now();
-    const meta = { filename: f.name, sizeBytes: f.size, uploadedAt: Date.now(), data: base };
-    const add = f.size;
-    if((state.profile.quota?.usedBytes || 0) + add > (state.profile.quota?.limitBytes || DEFAULT_QUOTA)) return alert('Melebihi quota');
-    await fetch(jq(`users/${state.domain}/images/${id}`), {method:'PUT', body: JSON.stringify(meta)});
-    await updateQuota(add);
-    await logAction(state.domain, 'upload_image', {name:f.name,size:f.size});
-    loadImageList();
-  };
-  reader.readAsDataURL(f);
-}
-
-async function loadImageList(){
-  const imgs = await safeFetch(jq(`users/${state.domain}/images`)) || {};
-  const el = document.getElementById('imageList'); if(!el) return;
-  const keys = Object.keys(imgs);
-  if(keys.length === 0){ el.innerHTML = '<div class="small">Belum ada image</div>'; return; }
-  el.innerHTML = keys.map(k=>`<div style="display:flex;justify-content:space-between;align-items:center"><div>${imgs[k].filename} — ${fmtBytes(imgs[k].sizeBytes)}</div><div><button class="btn ghost" onclick="viewImage('${k}')">View</button><button class="btn ghost" onclick="deleteImage('${k}')">Hapus</button></div></div>`).join('');
-}
-async function viewImage(id){
-  const img = await safeFetch(jq(`users/${state.domain}/images/${id}`));
-  if(!img) return;
-  const w = window.open('', '_blank');
-  w.document.write(`<title>${img.filename}</title><img src="${img.data}" style="max-width:100%">`);
-}
-async function deleteImage(id){
-  if(!confirm('Hapus image?')) return;
-  if(!await sessionGuard()) return;
-  const img = await safeFetch(jq(`users/${state.domain}/images/${id}`)) || {};
-  await fetch(jq(`users/${state.domain}/images/${id}`), {method:'DELETE'});
-  await updateQuota(- (img.sizeBytes || 0));
-  await logAction(state.domain, 'delete_image', {id});
-  loadImageList();
-}
-
-// ---------- quota ----------
-async function updateQuota(delta){
-  const p = await safeFetch(jq(`users/${state.domain}/quota`)) || state.profile.quota || {limitBytes:DEFAULT_QUOTA, usedBytes:0};
-  let used = p.usedBytes || 0;
-  used = Math.max(0, used + (delta || 0));
-  await fetch(jq(`users/${state.domain}/quota/usedBytes`), {method:'PUT', body: JSON.stringify(used)});
-  state.profile.quota.usedBytes = used;
-  document.getElementById('quotaInfo').innerText = `${fmtBytes(used)} / ${fmtBytes(p.limitBytes || DEFAULT_QUOTA)}`;
-}
-
-// ---------- preview & share ----------
-async function refreshPreview(){
-  const files = await listFiles();
-  const html = files['index.html'] || '';
-  let extras = '';
-  for(const f in files) if(f.endsWith('.css')) extras += `<style>${files[f]}</style>`;
-  for(const f in files) if(f.endsWith('.js')) extras += `<script>${files[f]}<\/script>`;
-  const doc = `<!doctype html><html><head>${extras}</head><body>${html}</body></html>`;
-  document.getElementById('previewFrame').srcdoc = doc;
-  // log preview (metric)
-  await logMetric('preview');
-}
-
-async function createShare(){
-  if(!await sessionGuard()) return;
-  const files = await listFiles();
-  if(!files['index.html']) return alert('Tidak ada index.html untuk dishare');
-  const token = randToken(12);
-  const payload = {domain: state.domain, file: 'index.html', createdAt: Date.now()};
-  await fetch(jq(`shares/${token}`), {method:'PUT', body: JSON.stringify(payload)});
-  await logAction(state.domain, 'create_share', {token});
-  const url = location.origin + location.pathname + `?share=${token}`;
-  try{ await navigator.clipboard.writeText(url); alert('Link share dibuat & dicopy: '+url); }catch{ alert('Link share: '+url); }
-}
-
-// ---------- public share viewer ----------
-async function checkPublicShare(){
-  const urlp = new URL(location.href);
-  const token = urlp.searchParams.get('share');
-  if(!token) return false;
-  const s = await safeFetch(jq(`shares/${token}`));
-  if(!s) { alert('Share invalid'); return true; }
-  const files = await safeFetch(jq(`users/${s.domain}/files`)) || {};
-  const doc = `<!doctype html><html><head>${Object.keys(files).filter(f=>f.endsWith('.css')).map(f=>`<style>${files[f]}</style>`).join('')}</head><body>${files[s.file]||''}${Object.keys(files).filter(f=>f.endsWith('.js')).map(f=>`<script>${files[f]}<\/script>`).join('')}</body></html>`;
-  document.body.innerHTML = `<div style="padding:12px;background:#0b1220;color:#fff"><div style="max-width:980px;margin:12px auto"><h2>Public Preview: ${s.domain}</h2><iframe style="width:100%;height:80vh;border:1px solid #333;background:#fff" srcdoc="${doc.replace(/"/g,'&quot;')}"></iframe></div></div>`;
-  return true;
-}
-
-// ---------- logs & metrics ----------
-async function logMetric(type){
-  try{
-    const d = new Date(); const day = d.toISOString().slice(0,10);
-    const t = Date.now();
-    await fetch(jq(`users/${state.domain}/metrics/visitors/${day}/${t}`), {method:'PUT', body: JSON.stringify({type, at:t})});
-  }catch(e){}
-}
-async function loadRecentLogs(){
-  const logs = await safeFetch(jq(`logs/${state.domain}`)) || {};
-  const keys = Object.keys(logs).sort().reverse().slice(0,8);
-  const out = keys.map(k=>`${new Date(parseInt(k)).toLocaleString()} — ${logs[k].action}`).join('<br>');
-  document.getElementById('recentLogs').innerHTML = out || '<div class="small">Belum ada log</div>';
-}
-async function loadMetrics(){
-  const metrics = await safeFetch(jq(`users/${state.domain}/metrics/visitors`)) || {};
-  const days = Object.keys(metrics).sort().reverse().slice(0,10);
-  const out = days.map(d => `<div class="small"><b>${d}</b>: ${Object.keys(metrics[d]||{}).length} hits</div>`).join('');
-  document.getElementById('metricsList').innerHTML = out || '<div class="small">Tidak ada metrics</div>';
-}
-
-// ---------- email ----------
-async function createEmailAccount(){
-  if(!await sessionGuard()) return;
-  const local = (document.getElementById('email_local').value||'').trim();
-  const pw = (document.getElementById('email_pw').value||'').trim();
-  if(!local||!pw) return alert('Isi local & password');
-  const address = `${local}@${state.domain}.ditxcloud`;
-  const phash = await sha256Hex(pw);
-  await fetch(jq(`users/${state.domain}/email/accounts/${encodeURIComponent(address)}`), {method:'PUT', body: JSON.stringify({passwordHash:phash, createdAt:Date.now()})});
-  await logAction(state.domain, 'create_email', {address});
-  loadEmailList();
-}
-async function loadEmailList(){
-  const acc = await safeFetch(jq(`users/${state.domain}/email/accounts`)) || {};
-  const el = document.getElementById('emailList'); if(!el) return;
-  el.innerHTML = Object.keys(acc).length ? Object.keys(acc).map(a=>`<div class="small">${a}</div>`).join('') : '<div class="small">Belum ada akun email</div>';
-}
-
-// ---------- DB (sim) ----------
-async function createDatabase(){
-  if(!await sessionGuard()) return;
-  const name = (document.getElementById('db_name').value||'').trim();
-  if(!name) return alert('Isi nama DB');
-  await fetch(jq(`users/${state.domain}/databases/${name}`), {method:'PUT', body: JSON.stringify({createdAt:Date.now(), tables:{}})});
-  await logAction(state.domain, 'create_db', {name});
-  loadDBList();
-}
-async function loadDBList(){
-  const dbs = await safeFetch(jq(`users/${state.domain}/databases`)) || {};
-  const el = document.getElementById('dbList'); if(!el) return;
-  const keys = Object.keys(dbs);
-  el.innerHTML = keys.length ? keys.map(k=>`<div style="display:flex;justify-content:space-between;align-items:center"><div class="small">${k}</div><div><button class="btn ghost" onclick="openDB('${k}')">Open</button></div></div>`).join('') : '<div class="small">Belum ada database</div>';
-}
-async function openDB(name){
-  const db = await safeFetch(jq(`users/${state.domain}/databases/${name}`)) || {};
-  const el = document.getElementById('dbEditor');
-  el.innerHTML = `<h4>${name}</h4><textarea id="dbEditorArea" style="width:100%;height:180px">${JSON.stringify(db, null, 2)}</textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="btn" onclick="saveDB('${name}')">Simpan</button><button class="btn ghost" onclick="closeDB()">Tutup</button></div>`;
-}
-function closeDB(){ document.getElementById('dbEditor').innerHTML = ''; }
-async function saveDB(name){
-  if(!await sessionGuard()) return;
-  const raw = document.getElementById('dbEditorArea').value;
-  let parsed = null;
-  try{ parsed = JSON.parse(raw); }catch(e){ return alert('JSON invalid'); }
-  await fetch(jq(`users/${state.domain}/databases/${name}`), {method:'PUT', body: JSON.stringify(parsed)});
-  await logAction(state.domain, 'save_db', {name});
-  alert('Saved');
-  loadDBList();
-}
-
-// ---------- domains ----------
-async function addSubdomain(){
-  if(!await sessionGuard()) return;
-  const name = (document.getElementById('sub_name').value||'').trim();
-  if(!name) return alert('Isi subdomain');
-  await fetch(jq(`users/${state.domain}/domains/subdomains/${name}`), {method:'PUT', body: JSON.stringify({createdAt:Date.now()})});
-  await logAction(state.domain, 'create_subdomain', {name});
-  loadSubdomains();
-}
-async function loadSubdomains(){
-  const s = await safeFetch(jq(`users/${state.domain}/domains/subdomains`)) || {};
-  const el = document.getElementById('subList'); if(!el) return;
-  el.innerHTML = Object.keys(s).length ? Object.keys(s).map(x=>`<div class="small">${x}.${state.domain}.ditxcloud</div>`).join('') : '<div class="small">Belum ada subdomain</div>';
-}
-async function addZoneRecord(){
-  if(!await sessionGuard()) return;
-  const type = document.getElementById('zone_type').value;
-  const name = (document.getElementById('zone_name').value||'').trim();
-  const value = (document.getElementById('zone_value').value||'').trim();
-  if(!name||!value) return alert('Isi name & value');
-  const current = await safeFetch(jq(`users/${state.domain}/domains/zone/records/${type}`)) || [];
-  current.push({name, value, ttl:3600});
-  await fetch(jq(`users/${state.domain}/domains/zone/records/${type}`), {method:'PUT', body: JSON.stringify(current)});
-  await logAction(state.domain, 'add_zone', {type,name,value});
-  loadZone();
-}
-async function loadZone(){
-  const zone = await safeFetch(jq(`users/${state.domain}/domains/zone/records`)) || {};
-  const el = document.getElementById('zoneList'); if(!el) return;
-  const out = Object.keys(zone).length ? Object.keys(zone).map(t=>`<div class="small"><b>${t}</b>: ${JSON.stringify(zone[t])}</div>`).join('') : '<div class="small">Zone kosong</div>';
-  el.innerHTML = out;
-}
-
-// ---------- security ----------
-async function blockIP(){
-  if(!await sessionGuard()) return;
-  const ip = (document.getElementById('block_ip').value||'').trim();
-  if(!ip) return alert('Isi IP');
-  await fetch(jq(`users/${state.domain}/security/blocked/${encodeURIComponent(ip)}`), {method:'PUT', body: JSON.stringify({addedAt:Date.now()})});
-  await logAction(state.domain, 'block_ip', {ip});
-  loadBlockedList();
-}
-async function loadBlockedList(){
-  const b = await safeFetch(jq(`users/${state.domain}/security/blocked`)) || {};
-  const el = document.getElementById('blockedList'); if(!el) return;
-  el.innerHTML = Object.keys(b).length ? Object.keys(b).map(ip=>`<div class="small">${ip}</div>`).join('') : '<div class="small">Tidak ada IP diblokir</div>';
-}
-
-// directory privacy
-async function protectDirectory(){
-  if(!await sessionGuard()) return;
-  const dir = (document.getElementById('dir_name').value||'').trim();
-  const pw = (document.getElementById('dir_pw').value||'').trim();
-  if(!dir||!pw) return alert('Isi folder & password');
-  const phash = await sha256Hex(pw);
-  await fetch(jq(`users/${state.domain}/directoryPrivacy/${encodeURIComponent(dir)}`), {method:'PUT', body: JSON.stringify({passwordHash:phash, createdAt:Date.now()})});
-  await logAction(state.domain, 'protect_dir', {dir});
-  loadDirectoryList();
-}
-async function loadDirectoryList(){
-  const d = await safeFetch(jq(`users/${state.domain}/directoryPrivacy`)) || {};
-  const el = document.getElementById('dirList'); if(!el) return;
-  el.innerHTML = Object.keys(d).length ? Object.keys(d).map(k=>`<div class="small">${k}</div>`).join('') : '<div class="small">Tidak ada protected dir</div>';
-}
-
-// ---------- backups ----------
-async function createBackup(){
-  if(!await sessionGuard()) return;
-  const files = await listFiles();
-  const id = 'bk_'+Date.now();
-  const meta = { type:'full', createdAt: Date.now(), files: files };
-  await fetch(jq(`users/${state.domain}/backups/${id}`), {method:'PUT', body: JSON.stringify(meta)});
-  await logAction(state.domain, 'create_backup', {id});
-  alert('Backup dibuat: '+id);
-}
-
-// ---------- software ----------
-async function installApp(){
-  if(!await sessionGuard()) return;
-  const app = document.getElementById('soft_app').value;
-  const id = 'inst_'+Date.now();
-  await fetch(jq(`users/${state.domain}/software/installations/${id}`), {method:'PUT', body: JSON.stringify({app,installedAt:Date.now(),url:'/'})});
-  await logAction(state.domain, 'install_app', {app});
-  loadSoftwareList();
-}
-async function loadSoftwareList(){
-  const s = await safeFetch(jq(`users/${state.domain}/software/installations`)) || {};
-  const el = document.getElementById('softList'); if(!el) return;
-  el.innerHTML = Object.keys(s).length ? Object.keys(s).map(k=>`<div class="small">${s[k].app} — ${new Date(s[k].installedAt).toLocaleString()}</div>`).join('') : '<div class="small">No installations</div>';
-}
-
-// ---------- account panel ----------
-async function loadAccountPanel(){
-  const p = state.profile || await safeFetch(jq(`users/${state.domain}`));
-  document.getElementById('accountContent').innerHTML = `<div class="small"><b>Nama:</b> ${p.profile?.nama||'-'}</div><div class="small"><b>Domain:</b> ${(p.profile?.domain||state.domain)}.ditxcloud</div><div class="small"><b>Alamat:</b> ${p.profile?.alamat||'-'}</div>`;
-}
-async function changePassword(){
-  if(!await sessionGuard()) return;
-  const cur = prompt('Password lama:'); if(!cur) return;
-  const neu = prompt('Password baru:'); if(!neu) return;
-  const p = await safeFetch(jq(`users/${state.domain}`));
-  const curHash = await sha256Hex(cur);
-  if(p.auth?.passwordHash !== curHash && p.password !== curHash) return alert('Password lama salah');
-  const newHash = await sha256Hex(neu);
-  await fetch(jq(`users/${state.domain}/auth/passwordHash`), {method:'PUT', body: JSON.stringify(newHash)});
-  await logAction(state.domain, 'change_password', {});
-  alert('Password diperbarui');
-}
-
-// ---------- admin ----------
-async function loadAllUsers(){
-  if(state.domain !== 'admin'){ document.getElementById('adminUsers').innerHTML = '<div class="small">Only admin</div>'; return; }
-  const all = await safeFetch(jq('users')) || {};
-  const out = Object.keys(all).map(u=>`<div class="small"><b>${u}</b> — ${(all[u].profile?.nama||'-')} — ${fmtBytes(all[u].quota?.usedBytes||0)}</div>`).join('');
-  document.getElementById('adminUsers').innerHTML = out || '<div class="small">No users</div>';
-}
-
-// ---------- init ----------
-(async function init(){
-  // 1) public share? then render preview
-  const skip = await checkPublicShare();
-  if(skip) return;
-
-  // 2) session check
-  const ok = await verifySession();
-  if(ok){
-    await loadProfile();
-    showApp();
-    navigate('overview');
-  } else {
-    showAuth();
-    showRegister();
+  const stored = (profile.auth && profile.auth.passwordHash) ? profile.auth.passwordHash : profile.password;
+  if(stored !== hash){
+    meta.fails = (meta.fails||0)+1;
+    if(meta.fails >= LOGIN_MAX_ATTEMPTS){ meta.lockedUntil = Date.now() + LOCKOUT_MS; meta.fails = 0; $('loginStatus').innerText = `Terlalu banyak percobaan. Terkunci ${Math.floor(LOCKOUT_MS/60000)} menit.`; }
+    else { $('loginStatus').innerText = `Password salah (${meta.fails}/${LOGIN_MAX_ATTEMPTS})`; }
+    setLoginMeta(domain, meta);
+    return;
   }
 
-  // small event
-  document.getElementById('newFileName').addEventListener('keydown', e=>{ if(e.key==='Enter') createFile(); });
-})();
+  // success
+  setLoginMeta(domain, {fails:0, lockedUntil:0});
+  await createSession(domain);
+  await fetch(jq(`logs/${domain}/${Date.now()}`), { method:'PUT', body: JSON.stringify({ action:'login', time:Date.now() }) });
+  $('loginStatus').innerText = 'Login sukses — redirect ke dashboard...';
+  state.domain = domain;
+  setTimeout(()=>{ window.location.href = 'dashboard.html'; }, 700);
+}
 
+// === when already logged in: quick actions ===
+async function updateLoggedUI(){
+  const ok = await verifySessionLocal();
+  if(!ok){ $('box-logged').style.display='none'; $('authCard').style.display=''; return; }
+  // show logged box
+  $('box-logged').style.display=''; $('authCard').style.display='';
+  $('box-register').style.display='none'; $('box-login').style.display='none';
+  $('tab-register').classList.remove('active'); $('tab-login').classList.remove('active');
+  // fetch profile for name
+  const profile = await safeFetch(jq(`users/${state.domain}/profile`)) || await safeFetch(jq(`users/${state.domain}`));
+  const name = profile?.nama || profile?.profile?.nama || state.domain;
+  $('loggedUser').innerText = `Anda masuk sebagai: ${name}`;
+  $('loggedDomain').innerText = `Domain: ${state.domain}.ditxcloud`;
+  $('sessionInfo').innerText = `Session aktif — token: ${state.sessionToken?.slice(0,8)}…`;
+}
+
+// === logout ===
+async function logout(){
+  const token = localStorage.getItem('ditx_session');
+  if(token) await fetch(jq(`sessions/${token}`), { method:'DELETE' }).catch(()=>{});
+  clearSessionLocal();
+  // show login/register again
+  $('box-logged').style.display='none';
+  switchTab('login');
+  $('loginStatus').innerText = 'Anda telah logout.';
+}
+
+// === go to dashboard (separate file) ===
+function goDashboard(){
+  // dashboard should check session on load (we created it here)
+  window.location.href = 'dashboard.html';
+}
+
+// === init ===
+(async function init(){
+  // set initial UI
+  switchTab('register');
+  // check session
+  const ok = await verifySessionLocal();
+  if(ok){
+    // show logged state, not the forms
+    $('authCard').scrollIntoView();
+    await updateLoggedUI();
+    $('authCard').style.border = '1px solid rgba(0,200,255,0.06)';
+  }
+})();
 </script>
+
 </body>
 </html>
