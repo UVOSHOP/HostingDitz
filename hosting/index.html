@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DitxCloud • cPanel Jupiter — Mini Hosting</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#071026;
+    --card:#0f1a2b;
+    --muted:#9bb0c8;
+    --accent1:#7c5cff;
+    --accent2:#00d4ff;
+    --glass: rgba(255,255,255,0.03);
+    --glass-2: rgba(255,255,255,0.02);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    color-scheme: dark;
+    color: #e9f2ff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:
+    radial-gradient(900px 380px at 10% 12%, rgba(124,92,255,0.06), transparent 8%),
+    linear-gradient(180deg,#001028 0%, var(--bg) 45%, #02030b 100%); -webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1200px;margin:0 auto;padding:28px}
+  header{display:flex;align-items:center;gap:18px;padding:8px 0}
+  .logo{
+    width:56px;height:56px;border-radius:12px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    font-weight:800;font-size:18px;color:white;box-shadow:0 10px 30px rgba(124,92,255,0.12)
+  }
+  .brand-title{font-weight:800;font-size:18px}
+  .top-actions{margin-left:auto;display:flex;gap:10px;align-items:center}
+
+  /* hero */
+  .hero{display:grid;grid-template-columns:1fr 460px;gap:28px;align-items:center;padding:36px 0}
+  .hero-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:28px;border-radius:14px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+  .hero h1{font-size:38px;margin:0 0 10px 0;line-height:1.05}
+  .hero p{color:var(--muted);margin:0 0 18px 0}
+  .cta{display:flex;gap:12px;margin-top:10px}
+  .btn{
+    padding:12px 16px;border-radius:10px;border:none;cursor:pointer;font-weight:700;letter-spacing:0.2px;
+    background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:#fff; box-shadow:0 10px 30px rgba(0,0,0,0.45)
+  }
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent2)}
+  .feature-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px}
+  .feature{background:var(--glass);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);display:flex;gap:12px;align-items:center}
+  .feature svg{width:36px;height:36px;flex:0 0 36px}
+  .feature h4{margin:0;font-size:14px}
+  .feature p{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+  /* right column: quick cards */
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+  .mini-stats{display:flex;gap:12px;flex-wrap:wrap}
+  .stat{flex:1;min-width:120px;padding:12px;border-radius:8px;background:var(--glass-2);text-align:center}
+  .stat h3{margin:0;font-size:20px}
+  .stat p{margin:6px 0 0 0;color:var(--muted);font-size:13px}
+
+  /* sections */
+  section{margin-top:28px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .card-hero{padding:18px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03)}
+
+  /* footer */
+  footer{margin-top:40px;padding:18px 0;color:var(--muted);text-align:center;font-size:13px}
+
+  /* responsive */
+  @media (max-width:1000px){
+    .hero{grid-template-columns:1fr}
+    .grid-3{grid-template-columns:1fr}
+    .feature-list{grid-template-columns:1fr}
+  }
+
+  /* subtle animations */
+  .fade-up{transform:translateY(10px);opacity:0;animation:fadeUp .7s ease forwards}
+  .stagger-1{animation-delay:.05s}.stagger-2{animation-delay:.12s}.stagger-3{animation-delay:.18s}
+  @keyframes fadeUp{to{transform:none;opacity:1}}
+
+  /* small helpers */
+  .muted{color:var(--muted)}
+  .pill{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.02);font-weight:700}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">JC</div>
+      <div>
+        <div class="brand-title">DitxCloud</div>
+        <div class="muted" style="font-size:13px">cPanel Jupiter — Mini Hosting</div>
+      </div>
+
+      <div class="top-actions">
+        <a href="akun.html" class="btn">Masuk / Daftar</a>
+        <a href="#features" class="btn ghost">Pelajari Fitur</a>
+      </div>
+    </header>
+
+    <main class="hero">
+      <div class="hero-card fade-up">
+        <h1>Hosting mini — build, test, dan bagikan situsmu dengan cepat</h1>
+        <p>DitxCloud adalah panel hosting ringan ala cPanel Jupiter. Buat file HTML, kelola email (simulasi), database, domain, dan fitur server lainnya — semuanya tersimpan sebagai JSON di Firebase Realtime Database.</p>
+
+        <div class="cta">
+          <a class="btn" href="akun.html">Mulai Sekarang — Gratis</a>
+          <button class="btn ghost" id="btnTour">Lihat Demo</button>
+        </div>
+
+        <div class="feature-list" style="margin-top:18px">
+          <div class="feature stagger-1">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M3 7v10a2 2 0 0 0 2 2h6V5H5a2 2 0 0 0-2 2z" fill="rgba(255,255,255,0.06)"/><path d="M13 5v14h6a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-6z" fill="url(#g)"/><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#00d4ff"/></linearGradient></defs></svg>
+            <div>
+              <h4>File Manager</h4>
+              <p>Upload, edit, preview, dan atur file situs kamu — semua teks disimpan ke JSON.</p>
+            </div>
+          </div>
+
+          <div class="feature stagger-2">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v6l4 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div>
+              <h4>Email (Simulasi)</h4>
+              <p>Buat akun email, forwarders, autoresponders, dan akses webmail simulasi.</p>
+            </div>
+          </div>
+
+          <div class="feature stagger-3">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.4"/></svg>
+            <div>
+              <h4>Databases</h4>
+              <p>Simulasi MySQL: buat database & pengguna, export/import JSON, dan phpMyAdmin-sim view.</p>
+            </div>
+          </div>
+
+          <div class="feature stagger-1">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 20c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8" stroke="currentColor" stroke-width="1.4"/></svg>
+            <div>
+              <h4>Domains & DNS</h4>
+              <p>Tambahkan subdomain, redirects, dan sunting zone records (A, CNAME, MX, TXT).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card fade-up stagger-2">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="muted">Akun</div>
+            <div style="font-weight:700">Belum login</div>
+          </div>
+          <div class="pill">Cloud JSON</div>
+        </div>
+
+        <div style="margin-top:14px" class="mini-stats">
+          <div class="stat">
+            <h3 id="statUsers">—</h3>
+            <p>Users</p>
+          </div>
+          <div class="stat">
+            <h3 id="statFiles">—</h3>
+            <p>Files</p>
+          </div>
+          <div class="stat">
+            <h3 id="statStorage">—</h3>
+            <p>Storage (est.)</p>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <a href="akun.html" class="btn" style="width:100%;">Masuk / Daftar</a>
+        </div>
+
+        <div style="margin-top:10px;color:var(--muted);font-size:13px">
+          <div>Butuh bantuan? Chat di Telegram / Discord (belum terintegrasi).</div>
+        </div>
+      </aside>
+    </main>
+
+    <section id="features">
+      <div class="wrap">
+        <h2 style="margin:8px 0 12px 0">Semua fitur — lengkap seperti cPanel</h2>
+        <div class="grid-3">
+          <div class="card-hero">
+            <h3>Files</h3>
+            <p class="muted">File Manager, Images, Directory Privacy, Disk Usage, FTP accounts, Backup & Backup Wizard — semua UI disediakan. File teks disimpan di Firebase JSON; gambar dapat di-encode atau disimpan di Storage (opsional).</p>
+          </div>
+          <div class="card-hero">
+            <h3>Databases</h3>
+            <p class="muted">Simulasi MySQL: buat database & user, wizard, phpMyAdmin-sim, remote MySQL (opsi). Data inti disimpan sebagai JSON agar sistem mandiri berbasis JSON.</p>
+          </div>
+          <div class="card-hero">
+            <h3>Domains</h3>
+            <p class="muted">Tambahkan domain utama, subdomain, redirects, dan sunting zone records. Simpan record DNS di JSON dan gunakan viewer untuk menampilkan konfigurasi.</p>
+          </div>
+          <div class="card-hero">
+            <h3>Metrics</h3>
+            <p class="muted">Visitors, Errors, Bandwidth, Resource Usage — ditampilkan dengan grafik (fase berikutnya) dan log terperinci.</p>
+          </div>
+          <div class="card-hero">
+            <h3>Security</h3>
+            <p class="muted">SSH (simulasi), IP Blocker, SSL/TLS status (simulasi), Two-Factor Authentication (2FA) — keamanan akan diperkuat setelah fase awal.</p>
+          </div>
+          <div class="card-hero">
+            <h3>Software</h3>
+            <p class="muted">Softaculous-like installer (simulasi), MultiPHP manager & ini editor. Installer menyimpan metadata aplikasi ke JSON.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:26px">
+      <div class="wrap">
+        <h3>Arsitektur singkat</h3>
+        <p class="muted">Sistem ini bersifat mandiri: semua data user, file, email (simulasi), database metadata, domain/DNS, logs, dan konfigurasi disimpan dalam struktur JSON di Firebase Realtime Database — jadi cukup modal JSON untuk menjalankan panel. Proteksi & session di-manage lewat node <code>sessions</code>. Untuk produksi, disarankan menggunakan Firebase Auth / backend middleware.</p>
+      </div>
+    </section>
+
+    <footer>
+      DitxCloud • cPanel Jupiter — prototype • Dibangun dengan HTML/CSS/JS & Firebase Realtime DB (JSON). © 2025
+    </footer>
+  </div>
+
+<script>
+  // small interactions
+  document.getElementById('btnTour').addEventListener('click', ()=> {
+    document.getElementById('features').scrollIntoView({behavior:'smooth'});
+  });
+
+  // demo: try to fetch some lightweight stats from your firebase (non-blocking)
+  (async function fetchStats(){
+    try{
+      // attempt to read a small node to show counts (if rules allow)
+      const DB = 'https://ditxcloud-default-rtdb.asia-southeast1.firebasedatabase.app';
+      const r = await fetch(DB + '/users.json'); // may return null or object
+      const j = await r.json();
+      const users = j ? Object.keys(j).length : 0;
+      let fileCount = 0; let storage = 0;
+      if(j){
+        Object.values(j).forEach(u=>{
+          if(u && u.files) {
+            fileCount += Object.keys(u.files).length;
+            Object.values(u.files).forEach(f=>{
+              if(typeof f === 'string') storage += new TextEncoder().encode(f).length;
+            });
+          }
+        });
+      }
+      document.getElementById('statUsers').innerText = users;
+      document.getElementById('statFiles').innerText = fileCount;
+      document.getElementById('statStorage').innerText = storage ? (storage/1024).toFixed(1)+' KB' : '—';
+    }catch(e){
+      // silent: likely rules deny or no data
+      document.getElementById('statUsers').innerText = '—';
+      document.getElementById('statFiles').innerText = '—';
+      document.getElementById('statStorage').innerText = '—';
+    }
+  })();
+</script>
+</body>
+</html>
