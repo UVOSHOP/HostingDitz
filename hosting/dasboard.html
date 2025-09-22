@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DitxCloud — Dashboard (cPanel Jupiter style)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<!-- CodeMirror for editor -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css"/>
+
+<style>
+:root{
+  --bg:#f3f6f9; --panel:#0f2433; --muted:#738599;
+  --accent:#0b74de; --card:#ffffff;
+  font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  color-scheme: light;
+  color: #1a2b3a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:linear-gradient(180deg,#eef5fb 0%, #f6f9fc 100%);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.topbar{
+  height:64px;background:linear-gradient(180deg,#0f2433,#0b1b29);color:#fff;display:flex;align-items:center;padding:0 18px;
+  box-shadow:0 2px 8px rgba(11,27,41,0.12);
+}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;background:#0b74de;color:#fff;border-radius:6px;display:grid;place-items:center;font-weight:800}
+.wrap{max-width:1200px;margin:18px auto;padding:0 18px}
+.header-actions{margin-left:auto;display:flex;gap:10px;align-items:center}
+.header-actions button{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:8px 10px;border-radius:6px;cursor:pointer}
+
+/* layout */
+.shell{display:grid;grid-template-columns:260px 1fr;gap:18px;margin-top:18px}
+.sidebar{
+  background:#fff;border-radius:8px;padding:12px;border:1px solid #e6eef6;height:calc(100vh - 140px);overflow:auto;
+  box-shadow:0 6px 18px rgba(15,36,51,0.06)
+}
+.side-user{display:flex;gap:12px;align-items:center;padding:8px;border-bottom:1px solid #f0f5f9;margin-bottom:12px}
+.avatar{width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,#0b74de,#00a8ff);display:grid;place-items:center;color:white;font-weight:700}
+.side-name{font-weight:700}
+.side-muted{font-size:13px;color:var(--muted)}
+
+.menu{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.menu button{display:flex;align-items:center;gap:10px;padding:10px;border-radius:6px;border:none;background:transparent;cursor:pointer;text-align:left;color:#1a2b3a}
+.menu button.active{background:linear-gradient(90deg, rgba(11,116,222,0.08), rgba(0,168,255,0.03));font-weight:700}
+
+.main{
+  background:#fff;border-radius:8px;padding:16px;border:1px solid #e6eef6;min-height:600px;box-shadow:0 6px 18px rgba(15,36,51,0.04)
+}
+.dashboard-grid{display:grid;grid-template-columns:1fr 300px;gap:12px}
+
+/* cPanel-like icons area (home view) */
+.panel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+.icon-card{background:#fff;border:1px solid #eef4fb;padding:12px;border-radius:8px;text-align:center;cursor:pointer}
+.icon-card img{width:48px;height:48px;display:block;margin:0 auto 8px auto}
+.icon-title{font-weight:700;font-size:14px}
+.icon-desc{font-size:13px;color:var(--muted);margin-top:6px}
+
+/* file manager */
+.fm-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.input,select{padding:8px;border-radius:6px;border:1px solid #dceaf6;width:100%}
+.btn{background:var(--accent);color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:700}
+.btn.ghost{background:transparent;border:1px solid #e1eefb;color:var(--accent)}
+.file-area{display:flex;gap:12px}
+.tree{width:260px;border-right:1px solid #eef5fb;padding-right:12px;overflow:auto;height:520px}
+.tree ul{list-style:none;margin:0;padding:6px}
+.tree li{padding:6px;border-radius:6px;cursor:pointer}
+.tree li.folder{display:flex;justify-content:space-between;align-items:center}
+.tree li:hover{background:#f5fbff}
+.file-list{flex:1;padding-left:6px}
+.file-table{width:100%;border-collapse:collapse}
+.file-table th, .file-table td{padding:8px;border-bottom:1px solid #f0f6fb;text-align:left}
+.file-actions{display:flex;gap:6px}
+
+/* editor */
+.editor-wrap{margin-top:8px;border:1px solid #e7f2fb;border-radius:6px;overflow:hidden}
+.CodeMirror{height:360px}
+
+/* right column */
+.right-panel .panel{background:#fafcff;padding:12px;border-radius:8px;border:1px solid #eef4fb}
+
+/* small */
+.small{font-size:13px;color:var(--muted)}
+.kv{display:flex;justify-content:space-between;gap:8px;padding:6px 0}
+
+/* responsive */
+@media (max-width:980px){
+  .shell{grid-template-columns:1fr}
+  .dashboard-grid{grid-template-columns:1fr}
+  .panel-grid{grid-template-columns:repeat(2,1fr)}
+  .tree{display:none}
+}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">JC</div>
+      <div>
+        <div style="font-weight:800">DitxCloud</div>
+        <div style="font-size:13px;color:#d8e9ff">cPanel Jupiter — Dashboard</div>
+      </div>
+    </div>
+    <div class="header-actions" id="topActions">
+      <button id="btnHome" class="btn.ghost" onclick="navigate('home')" style="border: none; color: #fff; background: transparent;">Home</button>
+      <div style="width:12px"></div>
+      <button id="logoutBtn" class="btn.ghost" onclick="doLogout()" style="border:none;color:#fff;background:transparent">Logout</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="side-user">
+          <div class="avatar" id="avatarShort">--</div>
+          <div>
+            <div class="side-name" id="sideName">Memuat...</div>
+            <div class="side-muted" id="sideDomain">-</div>
+          </div>
+        </div>
+
+        <div class="menu" id="menu">
+          <button data-panel="home" class="active" onclick="navigate('home')">🏠 Home</button>
+          <button data-panel="files" onclick="navigate('files')">📂 File Manager</button>
+          <button data-panel="email" onclick="navigate('email')">📧 Email</button>
+          <button data-panel="domain" onclick="navigate('domain')">🌐 Domains</button>
+          <button data-panel="info" onclick="navigate('info')">ℹ Info</button>
+          <button data-panel="spek" onclick="navigate('spek')">⚙ Spek</button>
+        </div>
+
+      </aside>
+
+      <main class="main">
+        <div id="content">
+
+          <!-- HOME / dashboard landing (cPanel-style icons) -->
+          <div id="panel_home">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <h2 style="margin:0">Dashboard</h2>
+                <div class="small" id="userStatus">Memuat status akun...</div>
+              </div>
+              <div>
+                <button class="btn" onclick="navigate('files')">Buka File Manager</button>
+              </div>
+            </div>
+
+            <div class="panel-grid">
+              <div class="icon-card" onclick="navigate('files')">
+                <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDcxOTg4IiB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZD0iTTIgMTJoMTZsNiA2aDEydjEwYzAgMS4xLS45IDItMiAyaC0yMEEyIDIgMCAwIDEgMiAxNHYtMnptMTggM2gxNiIvPjwvc3ZnPg==" alt="">
+                <div class="icon-title">Files</div>
+                <div class="icon-desc small">File Manager, Upload, Edit, Preview, Backup</div>
+              </div>
+
+              <div class="icon-card" onclick="navigate('domain')">
+                <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDcxOTg4IiB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZD0iTTEyIDI0YTggOCAwIDEgMSAxNiAwIDggOCAwIDEgMS0xNiAweiIvPjwvc3ZnPg==" alt="">
+                <div class="icon-title">Domains</div>
+                <div class="icon-desc small">Subdomain, Zone Editor, Redirects</div>
+              </div>
+
+              <div class="icon-card" onclick="navigate('email')">
+                <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDcxOTg4IiB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZD0iTTQgOGgxNnYyaDE2di0yYzAtMS4xLS45LTItMi0yaC0yMEEyIDIgMCAwIDEgNCA4eiIvPjwvc3ZnPg==" alt="">
+                <div class="icon-title">Email</div>
+                <div class="icon-desc small">Accounts, Forwarders, Autoresponders</div>
+              </div>
+
+              <div class="icon-card" onclick="navigate('info')">
+                <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDcxOTg4IiB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZD0iTTI0IDJBNDIgNCAwIDEgMCAyNCAyIi8+PC9zdmc+" alt="">
+                <div class="icon-title">Info</div>
+                <div class="icon-desc small">Account info, logs, quick links</div>
+              </div>
+
+              <div class="icon-card" onclick="navigate('spek')">
+                <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDcxOTg4IiB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZD0iTTI0IDJBNDIgNCAwIDEgMCAyNCAyIi8+PC9zdmc+" alt="">
+                <div class="icon-title">Spek</div>
+                <div class="icon-desc small">Resource usage, quota, disk</div>
+              </div>
+
+              <div class="icon-card" onclick="refreshAll()">
+                <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDcxOTg4IiB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZD0iTTIgMTJoMTZsNiA2aDEydjEwYzAgMS4xLS45IDItMiAyaC0yMEEyIDIgMCAwIDEgMiAxNHYtMnptMTggM2gxNiIvPjwvc3ZnPg==" alt="">
+                <div class="icon-title">Refresh</div>
+                <div class="icon-desc small">Sync latest data</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FILE MANAGER -->
+          <div id="panel_files" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <h3 style="margin:0">File Manager</h3>
+                <div class="small">Kelola file & folder situs Anda</div>
+              </div>
+              <div>
+                <button class="btn" onclick="createFolderPrompt()">+ Folder</button>
+                <button class="btn" onclick="createFilePrompt()">+ File</button>
+                <button class="btn ghost" onclick="openUpload()">Upload</button>
+                <input type="file" id="uploadFile" style="display:none" onchange="handleUpload(event)">
+              </div>
+            </div>
+
+            <div class="file-area" style="margin-top:12px">
+              <div class="tree panel" id="treeWrap">
+                <div style="font-weight:700;margin-bottom:6px">Directories</div>
+                <div style="margin-bottom:8px"><button class="btn ghost" onclick="selectFolder('')">/ (root)</button></div>
+                <div id="treeRoot"></div>
+              </div>
+
+              <div class="file-list panel">
+                <div class="fm-toolbar">
+                  <input id="searchFiles" class="input" placeholder="Cari file... (enter untuk cari)" onkeydown="if(event.key==='Enter') renderFileList()">
+                  <select id="filterType" onchange="renderFileList()" style="width:160px">
+                    <option value="">All Types</option>
+                    <option value=".html">.html</option><option value=".css">.css</option><option value=".js">.js</option><option value=".txt">.txt</option>
+                  </select>
+                  <div style="margin-left:auto" id="fmStat" class="small"></div>
+                </div>
+
+                <table class="file-table" id="fileTable">
+                  <thead><tr><th>Name</th><th>Size</th><th>Last Modified</th><th>Type</th><th>Actions</th></tr></thead>
+                  <tbody id="fileTableBody"><tr><td colspan="5" class="small">Memuat...</td></tr></tbody>
+                </table>
+
+                <div id="editorWrap" class="editor-wrap">
+                  <div class="small" style="padding:8px">Editor</div>
+                  <textarea id="editorArea"></textarea>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- EMAIL -->
+          <div id="panel_email" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <h3 style="margin:0">Email</h3>
+              <div class="small">Buat & kelola akun email (simulasi)</div>
+            </div>
+
+            <div style="margin-top:10px;display:flex;gap:8px">
+              <input id="emailLocal" class="input" placeholder="local part (contoh: info)">
+              <input id="emailPw" class="input" placeholder="password">
+              <button class="btn" onclick="createEmail()">Create</button>
+            </div>
+
+            <div style="margin-top:12px" id="emailList" class="panel small">Memuat...</div>
+          </div>
+
+          <!-- DOMAIN -->
+          <div id="panel_domain" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <h3 style="margin:0">Domains & Zone Editor</h3>
+              <div class="small">Atur subdomain, redirect, zone record</div>
+            </div>
+
+            <div style="margin-top:10px;display:flex;gap:8px">
+              <input id="subName" class="input" placeholder="subdomain (blog)">
+              <button class="btn" onclick="addSub()">Add Subdomain</button>
+            </div>
+
+            <div style="margin-top:12px" class="panel small" id="subList">Memuat...</div>
+
+            <div style="margin-top:12px" class="panel">
+              <div style="font-weight:700">Zone Editor</div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <select id="zoneType" class="input" style="width:120px"><option>A</option><option>CNAME</option><option>MX</option><option>TXT</option></select>
+                <input id="zoneName" class="input" placeholder="name (e.g. @ or www)">
+                <input id="zoneValue" class="input" placeholder="value">
+                <button class="btn" onclick="addZone()">Add</button>
+              </div>
+              <div id="zoneList" style="margin-top:10px" class="small"></div>
+            </div>
+          </div>
+
+          <!-- INFO -->
+          <div id="panel_info" style="display:none">
+            <h3>Account Info</h3>
+            <div class="panel" style="margin-top:8px">
+              <div class="kv"><div>Nama</div><div id="infoNama">-</div></div>
+              <div class="kv"><div>Domain</div><div id="infoDomain">-</div></div>
+              <div class="kv"><div>Alamat</div><div id="infoAlamat">-</div></div>
+              <div class="kv"><div>Created</div><div id="infoCreated">-</div></div>
+              <div style="margin-top:8px" class="small">Recent logs</div>
+              <div id="infoLogs" class="small"></div>
+            </div>
+          </div>
+
+          <!-- SPEK (specs) -->
+          <div id="panel_spek" style="display:none">
+            <h3>Spek / Resource</h3>
+            <div class="panel">
+              <div class="kv"><div>Quota</div><div id="spekQuota">-</div></div>
+              <div class="kv"><div>Disk Used</div><div id="spekUsed">-</div></div>
+              <div class="kv"><div>Files</div><div id="spekFiles">-</div></div>
+              <div class="kv"><div>Bandwidth (est)</div><div id="spekBandwidth">-</div></div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+<!-- CodeMirror -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+
+<script>
+/*
+  dashboard.html
+  - Verifies session stored in localStorage key 'ditx_session' by checking /sessions/{token} in Firebase.
+  - Uses Realtime DB REST API (DB_URL) to read/write under users/{domain}/...
+  - File manager supports nested folders (stored as nested JSON), files are strings or objects with "content".
+  - For development use: DB rules must allow reads/writes. For production, move to Auth + secure rules.
+*/
+
+const DB_URL = "https://ditxcloud-default-rtdb.asia-southeast1.firebasedatabase.app";
+const editorOpts = {lineNumbers:true,theme:'dracula',mode:'htmlmixed'};
+
+let state = {
+  sessionToken: null,
+  domain: null,
+  profile: null,
+  filesObj: {},  // nested structure from DB
+  currentFolder: '', // path string like '' or 'public_html'
+  currentFilePath: null, // 'public_html/index.html'
+  editor: null
+};
+
+function jq(path){ return `${DB_URL}/${path}.json`; }
+async function safeFetch(url, opts={}){ const r = await fetch(url, opts); if(r.ok){ try{ return await r.json(); }catch(e){return null} } if(r.status===204) return null; throw new Error('HTTP '+r.status); }
+function encodeSeg(s){ return encodeURIComponent(s).replace(/%2F/g, '/'); } // don't double encode slashes if any
+function pathToSegments(path){ if(!path) return []; return path.split('/').filter(Boolean); }
+function segsToPath(segs){ return segs.join('/'); }
+function now(){ return Date.now(); }
+function fmtBytes(n){ if(!n) return '0 B'; if(n<1024) return n+' B'; if(n<1024*1024) return (n/1024).toFixed(1)+' KB'; return (n/1024/1024).toFixed(2)+' MB'; }
+
+// session verify
+async function verifySession(){
+  const token = localStorage.getItem('ditx_session');
+  if(!token) return false;
+  try{
+    const s = await safeFetch(jq(`sessions/${token}`));
+    if(!s) { localStorage.removeItem('ditx_session'); return false; }
+    if(s.expires < Date.now()){ await fetch(jq(`sessions/${token}`), {method:'DELETE'}).catch(()=>{}); localStorage.removeItem('ditx_session'); return false; }
+    state.sessionToken = token; state.domain = s.domain; return true;
+  }catch(e){ console.error(e); return false; }
+}
+
+// logout
+async function doLogout(){
+  const t = localStorage.getItem('ditx_session');
+  if(t) await fetch(jq(`sessions/${t}`), {method:'DELETE'}).catch(()=>{});
+  localStorage.removeItem('ditx_session');
+  window.location.href = 'akun.html';
+}
+
+// initial load
+(async function init(){
+  const ok = await verifySession();
+  if(!ok){ alert('Belum login. Redirect ke halaman akun.'); window.location.href='akun.html'; return; }
+  // load profile and UI
+  await loadProfile();
+  navigate('home');
+  initEditor();
+})();
+
+// load profile & initial lists
+async function loadProfile(){
+  state.profile = await safeFetch(jq(`users/${state.domain}`)) || {};
+  document.getElementById('avatarShort').innerText = (state.profile.profile?.nama || state.domain).slice(0,2).toUpperCase();
+  document.getElementById('sideName').innerText = state.profile.profile?.nama || state.domain;
+  document.getElementById('sideDomain').innerText = (state.profile.profile?.domain || state.domain) + '.ditxcloud';
+  document.getElementById('userStatus').innerText = `${state.domain} — Plan: ${state.profile.profile?.plan || 'free'}`;
+  // load files tree
+  state.filesObj = await safeFetch(jq(`users/${state.domain}/files`)) || {};
+  renderTree();
+  renderFileList();
+  renderQuickInfo();
+  loadEmailList();
+  loadSubdomains();
+  loadZone();
+  loadRecentLogs();
+  loadSpecs();
+}
+
+// NAVIGATION
+function setActive(panelBtn){
+  document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active'));
+  const btn = document.querySelector('.menu button[data-panel="'+panelBtn+'"]');
+  if(btn) btn.classList.add('active');
+}
+function navigate(panel){
+  setActive(panel);
+  // hide all
+  ['home','files','email','domain','info','spek'].forEach(p => {
+    const el = document.getElementById('panel_'+p);
+    if(el) el.style.display = 'none';
+  });
+  const show = document.getElementById('panel_'+panel);
+  if(show) show.style.display = '';
+  if(panel === 'files'){ refreshFilesNode(); }
+  if(panel === 'email') loadEmailList();
+  if(panel === 'domain') { loadSubdomains(); loadZone(); }
+  if(panel === 'info') loadRecentLogs();
+  if(panel === 'spek') loadSpecs();
+}
+
+// ===== FILE MANAGER =====
+
+// Helper: join DB path for files: users/{domain}/files/<encoded path>
+function filesDbPathFor(pathSegs){
+  // pathSegs: array of segments
+  if(!pathSegs || pathSegs.length===0) return `users/${state.domain}/files`;
+  return `users/${state.domain}/files/${pathSegs.map(s=>encodeURIComponent(s)).join('/')}`;
+}
+
+// Refresh files node from DB
+async function refreshFilesNode(){
+  state.filesObj = await safeFetch(jq(`users/${state.domain}/files`)) || {};
+  renderTree();
+  renderFileList();
+}
+
+// Render tree from nested object
+function renderTree(){
+  const container = document.getElementById('treeRoot');
+  container.innerHTML = '';
+  function walk(obj, prefix=''){
+    const ul = document.createElement('ul');
+    Object.keys(obj || {}).sort().forEach(key => {
+      const val = obj[key];
+      const li = document.createElement('li');
+      const decodedKey = decodeURIComponent(key);
+      // determine if folder (object) or file (string)
+      const isFolder = typeof val === 'object' && (Object.keys(val).length > 0 || val === null);
+      li.className = isFolder ? 'folder' : '';
+      li.innerHTML = `<span onclick="selectFromTree('${prefix?prefix+'/':''}${decodedKey}')">${decodedKey}</span>` + (isFolder?` <small class="small">folder</small>`:'');
+      if(isFolder){
+        li.appendChild(walk(val, prefix?prefix+'/'+decodedKey:decodedKey));
+      }
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+  container.appendChild(walk(state.filesObj, ''));
+}
+
+// select folder from tree
+function selectFromTree(path){
+  state.currentFolder = path;
+  renderFileList();
+}
+
+// list files in currentFolder
+async function renderFileList(){
+  // build flat list from state.filesObj for current folder
+  const folder = state.currentFolder || '';
+  const pathSegs = pathToSegments(folder);
+  // access nested
+  let node = state.filesObj;
+  for(const s of pathSegs){
+    if(!node) break;
+    node = node[encodeURIComponent(s)];
+  }
+  const search = (document.getElementById('searchFiles').value||'').toLowerCase();
+  const filter = document.getElementById('filterType').value;
+  const tbody = document.getElementById('fileTableBody');
+  tbody.innerHTML = '';
+  if(!node || Object.keys(node).length===0){ tbody.innerHTML = `<tr><td colspan="5" class="small">Folder kosong</td></tr>`; return; }
+  // iterate entries
+  const entries = Object.keys(node).sort();
+  let totalSize=0, count=0;
+  entries.forEach(k=>{
+    const v = node[k];
+    const name = decodeURIComponent(k);
+    // determine file vs folder
+    const isFolder = typeof v === 'object' && (Object.keys(v).length > 0 || v === null);
+    const ext = isFolder ? 'folder' : (name.includes('.')? name.slice(name.lastIndexOf('.')) : '');
+    if(filter && ext !== filter) return;
+    if(search && !name.toLowerCase().includes(search)) return;
+    count++;
+    let size = 0;
+    if(!isFolder){
+      size = (typeof v === 'string') ? new TextEncoder().encode(v).length : (v.content ? new TextEncoder().encode(v.content).length : 0);
+      totalSize += size;
+    }
+    const tr = document.createElement('tr');
+    const modified = (v && v.modifiedAt) ? new Date(v.modifiedAt).toLocaleString() : '-';
+    tr.innerHTML = `<td>${name}</td><td>${isFolder?'-':fmtBytes(size)}</td><td>${isFolder?'-':modified}</td><td>${isFolder? 'Folder': ext || 'File'}</td><td class="file-actions"></td>`;
+    const actionsCell = tr.querySelector('.file-actions');
+    if(isFolder){
+      const openBtn = document.createElement('button'); openBtn.className='btn ghost'; openBtn.innerText='Open'; openBtn.onclick = ()=>{ state.currentFolder = (folder?folder+'/':'')+name; renderFileList(); };
+      const del = document.createElement('button'); del.className='btn ghost'; del.innerText='Del'; del.onclick = ()=> deleteFolder((folder?folder+'/':'')+name);
+      actionsCell.appendChild(openBtn); actionsCell.appendChild(del);
+    } else {
+      const edit = document.createElement('button'); edit.className='btn'; edit.innerText='Edit'; edit.onclick = ()=> openEditor((folder?folder+'/':'')+name);
+      const down = document.createElement('button'); down.className='btn ghost'; down.innerText='Download'; down.onclick = ()=> downloadFile((folder?folder+'/':'')+name);
+      const del = document.createElement('button'); del.className='btn ghost'; del.innerText='Delete'; del.onclick = ()=> deleteFile((folder?folder+'/':'')+name);
+      const rename = document.createElement('button'); rename.className='btn ghost'; rename.innerText='Rename'; rename.onclick = ()=> renameFilePrompt((folder?folder+'/':'')+name);
+      actionsCell.appendChild(edit); actionsCell.appendChild(down); actionsCell.appendChild(rename); actionsCell.appendChild(del);
+    }
+    tbody.appendChild(tr);
+  });
+  document.getElementById('fmStat').innerText = `${count} items — ${fmtBytes(totalSize)}`;
+}
+
+// create folder prompt
+function createFolderPrompt(){
+  const name = prompt('Nama folder baru (contoh: public_html):');
+  if(!name) return;
+  const folderPath = state.currentFolder ? `${state.currentFolder}/${name}` : name;
+  createFolder(folderPath);
+}
+async function createFolder(path){
+  if(!await guard()) return;
+  // create empty object at users/{domain}/files/<path> (PUT {} )
+  await fetch(jq(filesDbPathFor(pathToSegments(path))), {method:'PUT', body: JSON.stringify({})});
+  await log('create_folder', {path});
+  await refreshFilesNode();
+}
+
+// create file prompt
+function createFilePrompt(){
+  const name = prompt('Nama file (contoh: index.html):');
+  if(!name) return;
+  const path = state.currentFolder ? `${state.currentFolder}/${name}` : name;
+  createFile(path);
+}
+async function createFile(path){
+  if(!await guard()) return;
+  const ext = path.split('.').pop().toLowerCase();
+  let starter = '';
+  if(ext==='html') starter = "<!doctype html><html><head><meta charset='utf-8'><title>New</title></head><body><h1>Hello</h1></body></html>";
+  else if(ext==='css') starter = "/* CSS */";
+  else if(ext==='js') starter = "// JS";
+  else starter = "";
+  // write content string (compatible with older structure)
+  await fetch(jq(filesDbPathFor(pathToSegments(path))), {method:'PUT', body: JSON.stringify(starter)});
+  await log('create_file', {path});
+  await refreshFilesNode();
+  renderFileList();
+  openEditor(path);
+}
+
+// open editor for a file
+async function openEditor(path){
+  const dbPath = filesDbPathFor(pathToSegments(path));
+  const raw = await safeFetch(jq(dbPath));
+  let content = '';
+  if(typeof raw === 'string') content = raw;
+  else if(raw && raw.content) content = raw.content;
+  else content = '';
+  state.currentFilePath = path;
+  if(!state.editor) initEditor();
+  state.editor.setValue(content);
+  // highlight file in UI: set title in editor area
+  document.getElementById('editorWrap').scrollIntoView({behavior:'smooth'});
+}
+
+// save current editor content
+async function saveCurrent(){
+  if(!await guard()) return;
+  if(!state.currentFilePath) return alert('Tidak ada file terpilih');
+  const content = state.editor.getValue();
+  const dbPath = filesDbPathFor(pathToSegments(state.currentFilePath));
+  // write as raw string for compatibility
+  await fetch(jq(dbPath), {method:'PUT', body: JSON.stringify(content)});
+  // set modifiedAt meta separately if needed
+  await fetch(jq(`${dbPath}/modifiedAt`), {method:'PUT', body: JSON.stringify(Date.now())}).catch(()=>{});
+  await log('save_file', {path:state.currentFilePath});
+  alert('Tersimpan');
+  await refreshFilesNode();
+  renderFileList();
+}
+
+// download a file
+async function downloadFile(path){
+  const dbPath = filesDbPathFor(pathToSegments(path));
+  const raw = await safeFetch(jq(dbPath));
+  let content = '';
+  if(typeof raw === 'string') content = raw;
+  else if(raw && raw.content) content = raw.content;
+  else { alert('Tidak ada content'); return; }
+  const blob = new Blob([content], {type:'text/plain'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = path.split('/').pop(); a.click();
+  await log('download_file', {path});
+}
+
+// delete file
+async function deleteFile(path){
+  if(!confirm('Hapus file '+path+' ?')) return;
+  if(!await guard()) return;
+  await fetch(jq(filesDbPathFor(pathToSegments(path))), {method:'DELETE'});
+  await log('delete_file', {path});
+  await refreshFilesNode();
+  renderFileList();
+}
+
+// delete folder (only empty or will delete all children)
+async function deleteFolder(path){
+  if(!confirm('Hapus folder '+path+' dan semua isinya ?')) return;
+  if(!await guard()) return;
+  await fetch(jq(filesDbPathFor(pathToSegments(path))), {method:'DELETE'});
+  await log('delete_folder', {path});
+  await refreshFilesNode();
+  renderFileList();
+}
+
+// rename file
+async function renameFilePrompt(path){
+  const newName = prompt('Nama baru untuk '+path+':', path.split('/').pop());
+  if(!newName) return;
+  const segs = pathToSegments(path);
+  segs.pop();
+  const newPath = (segs.length?segs.join('/') + '/':'') + newName;
+  await renamePath(path, newPath);
+}
+async function renamePath(oldPath, newPath){
+  if(!await guard()) return;
+  const oldDb = await safeFetch(jq(filesDbPathFor(pathToSegments(oldPath))));
+  await fetch(jq(filesDbPathFor(pathToSegments(newPath))), {method:'PUT', body: JSON.stringify(oldDb)});
+  await fetch(jq(filesDbPathFor(pathToSegments(oldPath))), {method:'DELETE'});
+  await log('rename', {old:oldPath,new:newPath});
+  await refreshFilesNode();
+  renderFileList();
+}
+
+// upload file
+function openUpload(){ document.getElementById('uploadFile').click(); }
+async function handleUpload(e){
+  if(!await guard()) return;
+  const f = e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = async function(evt){
+    const isText = f.type.startsWith('text') || f.name.endsWith('.html') || f.name.endsWith('.css') || f.name.endsWith('.js') || f.name.endsWith('.txt');
+    if(isText){
+      const text = evt.target.result;
+      const destPath = state.currentFolder ? `${state.currentFolder}/${f.name}` : f.name;
+      await fetch(jq(filesDbPathFor(pathToSegments(destPath))), {method:'PUT', body: JSON.stringify(text)});
+      await log('upload_file', {path:destPath, size:f.size});
+      await refreshFilesNode(); renderFileList();
+      alert('Upload sukses');
+    } else {
+      // for binary files (images) store under images node as base64
+      const base = evt.target.result;
+      const id = 'img_'+Date.now();
+      await fetch(jq(`users/${state.domain}/images/${id}`), {method:'PUT', body: JSON.stringify({ filename: f.name, sizeBytes: f.size, data: base, uploadedAt: Date.now() })});
+      await log('upload_image', {id, name:f.name, size:f.size});
+      loadImageList();
+      alert('Image uploaded to images node');
+    }
+  };
+  reader.readAsDataURL(f);
+}
+
+// init CodeMirror editor
+function initEditor(){
+  if(state.editor) return;
+  state.editor = CodeMirror.fromTextArea(document.getElementById('editorArea'), editorOpts);
+  // add save button dynamically
+  const btn = document.createElement('button'); btn.className='btn'; btn.innerText='Save'; btn.style.margin='8px'; btn.onclick = saveCurrent;
+  document.getElementById('editorWrap').insertBefore(btn, document.getElementById('editorWrap').firstChild);
+}
+
+// ===== EMAIL =====
+async function createEmail(){
+  if(!await guard()) return;
+  const local = (document.getElementById('emailLocal').value||'').trim();
+  const pw = (document.getElementById('emailPw').value||'').trim();
+  if(!local||!pw) return alert('Isi local & password');
+  const address = `${local}@${state.domain}.ditxcloud`;
+  const hash = await sha256Hex(pw);
+  await fetch(jq(`users/${state.domain}/email/accounts/${encodeURIComponent(address)}`), {method:'PUT', body: JSON.stringify({passwordHash:hash, createdAt:Date.now()})});
+  await log('create_email', {address});
+  loadEmailList();
+}
+async function loadEmailList(){
+  const acc = await safeFetch(jq(`users/${state.domain}/email/accounts`)) || {};
+  const el = document.getElementById('emailList');
+  const keys = Object.keys(acc);
+  if(keys.length===0) el.innerHTML = '<div class="small">No email accounts</div>';
+  else el.innerHTML = keys.map(a=>`<div style="display:flex;justify-content:space-between;align-items:center"><div>${a}</div><div><button class="btn ghost" onclick="deleteEmail('${encodeURIComponent(a)}')">Delete</button></div></div>`).join('');
+}
+async function deleteEmail(addrEnc){
+  if(!confirm('Delete '+decodeURIComponent(addrEnc)+' ?')) return;
+  if(!await guard()) return;
+  await fetch(jq(`users/${state.domain}/email/accounts/${addrEnc}`), {method:'DELETE'});
+  await log('delete_email',{address:decodeURIComponent(addrEnc)});
+  loadEmailList();
+}
+
+// ===== DOMAINS =====
+async function addSub(){
+  if(!await guard()) return;
+  const name = (document.getElementById('subName').value||'').trim();
+  if(!name) return alert('Isi subdomain');
+  await fetch(jq(`users/${state.domain}/domains/subdomains/${encodeURIComponent(name)}`), {method:'PUT', body: JSON.stringify({createdAt:Date.now(), target:'/public_html/'+name})});
+  await log('create_subdomain', {name});
+  loadSubdomains();
+}
+async function loadSubdomains(){
+  const s = await safeFetch(jq(`users/${state.domain}/domains/subdomains`)) || {};
+  const el = document.getElementById('subList');
+  el.innerHTML = Object.keys(s).length ? Object.keys(s).map(k=>`<div class="small">${k}.${state.domain}.ditxcloud</div>`).join('') : '<div class="small">No subdomains</div>';
+}
+async function addZone(){
+  if(!await guard()) return;
+  const type = document.getElementById('zoneType').value;
+  const name = (document.getElementById('zoneName').value||'').trim();
+  const value = (document.getElementById('zoneValue').value||'').trim();
+  if(!name||!value) return alert('Isi name & value');
+  const current = await safeFetch(jq(`users/${state.domain}/domains/zone/records/${type}`)) || [];
+  current.push({name, value, ttl:3600});
+  await fetch(jq(`users/${state.domain}/domains/zone/records/${type}`), {method:'PUT', body: JSON.stringify(current)});
+  await log('add_zone', {type,name,value});
+  loadZone();
+}
+async function loadZone(){
+  const zone = await safeFetch(jq(`users/${state.domain}/domains/zone/records`)) || {};
+  const el = document.getElementById('zoneList');
+  el.innerHTML = Object.keys(zone).length ? Object.keys(zone).map(t=>`<div class="small"><b>${t}</b>: ${JSON.stringify(zone[t])}</div>`).join('') : '<div class="small">Zone kosong</div>';
+}
+
+// ===== INFO & LOGS =====
+async function loadRecentLogs(){
+  const logs = await safeFetch(jq(`logs/${state.domain}`)) || {};
+  const keys = Object.keys(logs).sort().reverse().slice(0,12);
+  document.getElementById('infoLogs').innerHTML = keys.length ? keys.map(k=>`<div class="small">${new Date(parseInt(k)).toLocaleString()} — ${logs[k].action}</div>`).join('') : '<div class="small">No logs</div>';
+}
+
+// ===== SPECS =====
+async function loadSpecs(){
+  // compute simple metrics (file count, used bytes)
+  const files = await safeFetch(jq(`users/${state.domain}/files`)) || {};
+  const result = {count:0,used:0};
+  function walk(o){
+    Object.keys(o||{}).forEach(k=>{
+      const v = o[k];
+      if(typeof v === 'string'){ result.count++; result.used += new TextEncoder().encode(v).length; }
+      else if(v && typeof v === 'object') walk(v);
+    });
+  }
+  walk(files);
+  document.getElementById('spekFiles').innerText = result.count;
+  document.getElementById('spekUsed').innerText = fmtBytes(result.used);
+  const quota = state.profile.quota || {limitBytes: 0, usedBytes: result.used};
+  document.getElementById('spekQuota').innerText = fmtBytes(quota.limitBytes) + ' limit';
+  document.getElementById('spekBandwidth').innerText = (state.profile.metrics && state.profile.metrics.bandwidthMonthlyBytes) ? fmtBytes(state.profile.metrics.bandwidthMonthlyBytes) : '—';
+}
+
+// ===== Misc helpers =====
+async function guard(){
+  // verify session node again
+  const ok = await verifySession();
+  if(!ok){ alert('Session invalid — login ulang'); window.location.href='akun.html'; return false; }
+  return true;
+}
+async function log(action, detail){
+  try{
+    const t = Date.now();
+    await fetch(jq(`logs/${state.domain}/${t}`), {method:'PUT', body: JSON.stringify({action, detail, time:t})});
+  }catch(e){}
+}
+async function refreshAll(){
+  await loadProfile();
+  alert('Refreshed');
+}
+
+/* utilities used in other places */
+async function sha256Hex(s){ const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+
+// ===== images list helper (used by files) =====
+async function loadImageList(){
+  const imgs = await safeFetch(jq(`users/${state.domain}/images`)) || {};
+  // for demo we simply log count
+  // display in a console / info if needed
+  return imgs;
+}
+
+// ===== recent logs loader for info panel =====
+async function loadRecentLogs(){
+  const logs = await safeFetch(jq(`logs/${state.domain}`)) || {};
+  const keys = Object.keys(logs).sort().reverse().slice(0,8);
+  document.getElementById('recentLogs').innerHTML = keys.map(k=>`${new Date(parseInt(k)).toLocaleString()} — ${logs[k].action}`).join('<br>') || '<div class="small">No logs</div>';
+}
+
+// small helpers for email, image etc.
+async function loadEmailList(){ const acc = await safeFetch(jq(`users/${state.domain}/email/accounts`)) || {}; document.getElementById('emailList').innerHTML = Object.keys(acc).length ? Object.keys(acc).map(a=>`<div class="small">${a}</div>`).join('') : '<div class="small">No email accounts</div>'; }
+async function loadSubdomains(){ const s = await safeFetch(jq(`users/${state.domain}/domains/subdomains`)) || {}; document.getElementById('subList').innerHTML = Object.keys(s).length ? Object.keys(s).map(k=>`<div class="small">${k}.${state.domain}.ditxcloud</div>`).join('') : '<div class="small">No subdomains</div>'; }
+
+// ===== helper: prompt rename folder/file, select folder =====
+function renamePrompt(){ const p = prompt('Path to rename:'); }
+function selectFolder(path){ state.currentFolder = path; renderFileList(); }
+
+// ===== utilities used earlier that may be referenced =====
+async function sha256(s){ return sha256Hex(s); } // convenience
+
+</script>
+</body>
+</html>
