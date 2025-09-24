@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>privychat -Chat Privasi</title>
+  <style>
+    :root{--bg:#f7fafc;--card:#ffffff;--muted:#6b7280;--accent:#0ea5a4}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{background:linear-gradient(180deg,#f8fafc 0%,#ffffff 100%);display:flex;align-items:center;justify-content:center;padding:24px}
+    .app{width:100%;max-width:880px;height:90vh;background:var(--card);box-shadow:0 10px 30px rgba(2,6,23,0.08);border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
+
+    header{padding:18px 24px;border-bottom:1px dashed rgba(15,23,42,0.04);display:flex;align-items:center;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;box-shadow:0 6px 20px rgba(14,165,164,0.18)}
+    .title{font-weight:700;font-size:16px}
+    .subtitle{font-size:13px;color:var(--muted)}
+
+    .chat-area{flex:1;display:flex;flex-direction:column;padding:22px;gap:12px;overflow:hidden}
+    .messages{flex:1;overflow:auto;padding-right:8px;display:flex;flex-direction:column;gap:12px}
+
+    .bubble-row{display:flex;gap:12px;align-items:flex-end}
+    .bubble{max-width:70%;padding:12px 14px;border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,0.04);position:relative}
+    .bubble .meta{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .bubble.you{background:linear-gradient(90deg,#dcfce7,#bbf7d0);align-self:flex-end;border-bottom-right-radius:6px}
+    .bubble.other{background:#f3f4f6;border-bottom-left-radius:6px}
+    .avatar{width:36px;height:36px;border-radius:8px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-weight:700;color:#3730a3}
+
+    .input-bar{display:flex;padding:12px;border-top:1px solid rgba(15,23,42,0.04);gap:12px;align-items:center}
+    .input{flex:1;display:flex;gap:10px;align-items:center}
+    .text{flex:1;padding:12px 14px;border-radius:999px;border:1px solid rgba(15,23,42,0.06);background:#fff;outline:none}
+    button.send{background:var(--accent);color:white;border:none;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
+    button.send:disabled{opacity:0.5;cursor:not-allowed}
+
+    /* small controls */
+    .controls{margin-left:auto;display:flex;gap:8px;align-items:center}
+    .small-btn{background:transparent;border:1px solid rgba(15,23,42,0.06);padding:8px;border-radius:8px;cursor:pointer}
+
+    /* username modal */
+    .modal{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:flex;align-items:center;justify-content:center}
+    .modal-card{background:var(--card);padding:22px;border-radius:12px;min-width:320px;box-shadow:0 20px 60px rgba(2,6,23,0.18)}
+    .modal h3{margin:0 0 8px 0}
+    .modal p{margin:0 0 16px 0;color:var(--muted);font-size:13px}
+    .modal input{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(15,23,42,0.06)}
+    .modal button{margin-top:12px;padding:10px 12px;border-radius:8px;border:none;background:var(--accent);color:white;font-weight:700;cursor:pointer}
+
+    .ts{font-size:11px;color:var(--muted);margin-top:6px}
+
+    @media (max-width:640px){.bubble{max-width:85%}.app{height:95vh}}
+  </style>
+</head>
+<body>
+  <div class="app" role="application">
+    <header>
+      <div class="brand">
+        <div class="logo">UV</div>
+        <div>
+          <div class="title">privychat</div>
+          <div class="subtitle">platfom chat aman berend-to-end encryption (E2EE)</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="small-btn" id="changeNameBtn" title="Ganti username">⚙setelan</button>
+      </div>
+    </header>
+
+    <main class="chat-area">
+      <div id="messages" class="messages" aria-live="polite"></div>
+
+      <div class="input-bar">
+        <div class="input">
+          <input id="textInput" class="text" type="text" placeholder="Ketik pesan..." aria-label="Pesan" />
+        </div>
+        <button id="sendBtn" class="send">Kirim</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Username modal -->
+  <div id="usernameModal" class="modal" style="display:none">
+    <div class="modal-card">
+      <h3>Masukkan username</h3>
+      <p>Masukkan username,bisa di edit di setelan.</p>
+      <input id="usernameInput" placeholder="contoh: ADITdev" />
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button id="saveNameBtn">Simpan & Masuk</button>
+        <button id="clearStorageBtn" style="background:#eef2ff;border:1px solid rgba(14,165,164,0.08);color:#065f46">Reset</button>
+      </div>
+      <div class="ts">Jangan gunakan informasi sensitif. Username publik akan terlihat di chat.</div>
+    </div>
+  </div>
+
+  <!-- Firebase compat scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
+    // === EDIT ONLY THIS: masukkan databaseURL dari user ===
+    const firebaseConfig = {
+      databaseURL: 'https://uvoword-default-rtdb.asia-southeast1.firebasedatabase.app'
+    };
+    // initialize
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const chatRef = db.ref('global_chat');
+
+    // helpers
+    const escapeHtml = (s) => {
+      if (!s) return '';
+      return s.replace(/[&<>"]+/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+    };
+    const fmtTime = (ts) => {
+      const d = new Date(ts);
+      return d.toLocaleString();
+    };
+
+    // UI refs
+    const messagesEl = document.getElementById('messages');
+    const textInput = document.getElementById('textInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const usernameModal = document.getElementById('usernameModal');
+    const usernameInput = document.getElementById('usernameInput');
+    const saveNameBtn = document.getElementById('saveNameBtn');
+    const clearStorageBtn = document.getElementById('clearStorageBtn');
+    const changeNameBtn = document.getElementById('changeNameBtn');
+
+    // device username (1 device 1 account)
+    const STORAGE_KEY = 'uvo_chat_username_v1';
+    function getUsername(){return localStorage.getItem(STORAGE_KEY)}
+    function setUsername(v){localStorage.setItem(STORAGE_KEY,v)}
+    function clearUsername(){localStorage.removeItem(STORAGE_KEY)}
+
+    function showModal(){usernameModal.style.display='flex';usernameInput.focus();}
+    function hideModal(){usernameModal.style.display='none';}
+
+    // initial username flow
+    (function initUsername(){
+      const name = getUsername();
+      if (!name){showModal();} else {renderSystemNotice('Bergabung sebagai: ' + name)}
+    })();
+
+    // Send message
+    function sendMessage(){
+      const text = textInput.value.trim();
+      const username = getUsername();
+      if (!username){showModal();return}
+      if (!text) return;
+      const payload = {
+        username: username,
+        text: text,
+        createdAt: Date.now()
+      };
+      // push to firebase
+      chatRef.push(payload).catch(err=>{
+        console.error('Gagal kirim:',err);
+        alert('Gagal mengirim pesan. Cek console.');
+      });
+      textInput.value='';
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    textInput.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') sendMessage(); });
+
+    // listen for new messages
+    chatRef.limitToLast(200).on('child_added', snapshot=>{
+      const msg = snapshot.val();
+      appendMessage(msg);
+    });
+
+    function appendMessage(msg){
+      const username = getUsername();
+      const isYou = username && msg.username === username;
+      const row = document.createElement('div'); row.className='bubble-row';
+      const avatar = document.createElement('div'); avatar.className='avatar'; avatar.textContent = msg.username ? msg.username.slice(0,2).toUpperCase() : '??';
+      const bubble = document.createElement('div'); bubble.className='bubble ' + (isYou ? 'you':'other');
+      const meta = document.createElement('div'); meta.className='meta'; meta.textContent = (msg.username || 'Anon') + ' • ' + fmtTime(msg.createdAt || Date.now());
+      const content = document.createElement('div'); content.className='content'; content.innerHTML = escapeHtml(msg.text);
+      bubble.appendChild(meta);
+      bubble.appendChild(content);
+
+      if (isYou){ row.appendChild(bubble); row.appendChild(avatar);} else { row.appendChild(avatar); row.appendChild(bubble); }
+      messagesEl.appendChild(row);
+      // auto-scroll
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function renderSystemNotice(text){
+      const row = document.createElement('div'); row.style.textAlign='center'; row.style.color='var(--muted)'; row.style.fontSize='13px'; row.style.margin='8px 0'; row.textContent = text;
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // modal actions
+    saveNameBtn.addEventListener('click', ()=>{
+      const v = usernameInput.value.trim();
+      if (!v){usernameInput.focus();return}
+      setUsername(v);
+      hideModal();
+      renderSystemNotice('Bergabung sebagai: ' + v);
+    });
+    clearStorageBtn.addEventListener('click', ()=>{ if(confirm('Hapus username dari perangkat?')){ clearUsername(); alert('Username dihapus. Muat ulang halaman untuk memilih username baru.'); } });
+    changeNameBtn.addEventListener('click', ()=>{ showModal(); usernameInput.value = getUsername()||''; usernameInput.focus(); });
+
+    // accessibility: focus input after name chosen
+    usernameModal.addEventListener('transitionend', ()=>{ textInput.focus(); });
+
+    // small safety: trim long messages
+    textInput.addEventListener('input', ()=>{ if (textInput.value.length>1000) textInput.value = textInput.value.slice(0,1000); });
+
+    // initial keyboard focus
+    window.addEventListener('load', ()=>{ if (getUsername()) textInput.focus(); });
+  </script>
+</body>
+</html>
